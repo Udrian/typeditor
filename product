@@ -1,0 +1,9 @@
+{
+    "name": "TypeDitor",
+    "version": "0.1.0",
+    "externals": ["Ookii.Dialogs.Wpf.dll", "TypeD.dll"],
+    "dependencies": [
+        "TypeD-0.1.0"
+    ],
+    "type" : "Exe"
+}

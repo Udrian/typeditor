@@ -1,0 +1,3 @@
+[submodule "typer"]
+	path = typer
+	url = https://github.com/Udrian/typer.git

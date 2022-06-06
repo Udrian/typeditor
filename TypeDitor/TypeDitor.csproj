@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<Authors>Simon Haggren</Authors>
+		<Company>Typedeaf</Company>
+		<Product>TypeO</Product>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/dependency.py -p $(ProjectDir)../&quot;"/>
+	</Target>
+	<ItemGroup>
+		<None Remove="Icons\namespace.png"/>
+		<None Remove="Icons\Run.png"/>
+	</ItemGroup>
+	<ItemGroup>
+		<Resource Include="Icons\namespace.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Icons\Run.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1"/>
+	</ItemGroup>
+	<ItemGroup Label="TypeOModules">
+		<Reference Include="TypeD" HintPath="C:\Users\simon\AppData\Local/TypeO/ModulesCache/TypeD/0.1.0/TypeD.dll"/>
+	</ItemGroup>
+</Project>
