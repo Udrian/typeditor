@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using TypeD;
 using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
@@ -45,7 +46,7 @@ namespace TypeDitor.ViewModel
             get
             {
                 var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
-                return setting.SizeX.Value;
+                return setting?.SizeX?.Value ?? 1024;
             }
             set
             {
@@ -60,7 +61,7 @@ namespace TypeDitor.ViewModel
             get
             {
                 var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
-                return setting.SizeY.Value;
+                return setting?.SizeY?.Value ?? 768;
             }
             set
             {
@@ -75,7 +76,7 @@ namespace TypeDitor.ViewModel
             get
             {
                 var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
-                return setting.Fullscreen.Value ? WindowState.Maximized : WindowState.Normal;
+                return setting?.Fullscreen.Value == true ? WindowState.Maximized : WindowState.Normal;
             }
             set
             {
@@ -185,6 +186,7 @@ namespace TypeDitor.ViewModel
                 }
             }
 
+            TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
             HookModel.Shoot(new ExitHook() { Project = LoadedProject });
             return false;
         }

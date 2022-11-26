@@ -145,6 +145,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             foreach(var dependency in createdModule.Product.Dependencies)
             {
                 var nameVersion = dependency.Split("-");
+                nameVersion[1] = nameVersion[1].Split(";")[0];
                 nameVersion[1] = ModuleList.FirstOrDefault(m => m.Name == nameVersion[0])?.Versions?.FirstOrDefault(v => v.Version.StartsWith(nameVersion[1]))?.Version;
                 InstallModule(nameVersion[0], nameVersion[1], alreadyInstalled);
             }
