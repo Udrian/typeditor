@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net6.0-windows</TargetFramework>
+		<TargetFramework>net7.0-windows</TargetFramework>
 		<Authors>Simon Haggren</Authors>
 		<Company>Typedeaf</Company>
 		<Product>TypeO</Product>
@@ -26,6 +26,6 @@
 		<PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1"/>
 	</ItemGroup>
 	<ItemGroup Label="TypeOModules">
-		<Reference Include="TypeD" HintPath="C:\Users\simon\AppData\Local/TypeO/ModulesCache/TypeD/0.1.0/TypeD.dll"/>
+		<ProjectReference Name="TypeD" Include="D:/projects/typeo/typed/TypeD/TypeD.csproj"/>
 	</ItemGroup>
 </Project>
