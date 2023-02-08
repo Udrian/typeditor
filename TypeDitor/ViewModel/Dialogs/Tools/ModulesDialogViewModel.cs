@@ -116,7 +116,20 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             if (alreadyInstalled.Contains(name) || name == "TypeD") return;
             alreadyInstalled.Add(name);
 
-            var module = AllModules.First(m => m.Name == name);
+            var module = AllModules.FirstOrDefault(m => m.Name == name);
+            if(module == null)
+            {
+                module = new Module()
+                {
+                    Name = name,
+                    Enabled = false,
+                    Version = "",
+                    Versions = new List<string>() { version },
+                    Progress = 0,
+                    ProgressVisible = Visibility.Hidden
+                };
+                AllModules.Add(module);
+            }
             if (string.IsNullOrEmpty(version))
                 version = module.Versions.FirstOrDefault();
             module.Version = version;
@@ -124,30 +137,38 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             module.ProgressVisible = Visibility.Visible;
             var createdModule = ModuleProvider.Create(module.Name, module.Version);
             ProjectModel.AddModule(LoadedProject, createdModule);
-            await ModuleModel.Download(createdModule, (bytes, mProgress, totalBytes) => {
-                module.Progress = mProgress;
-                module.BytesDownloaded = bytes;
-                module.TotalBytesDownload = totalBytes;
-                module.OnPropertyChanged(nameof(module.DownloadText));
-            });
+            
+            if (!createdModule.IsLocal)
+            {
+                await ModuleModel.Download(createdModule, (bytes, mProgress, totalBytes) =>
+                {
+                    module.Progress = mProgress;
+                    module.BytesDownloaded = bytes;
+                    module.TotalBytesDownload = totalBytes;
+                    module.OnPropertyChanged(nameof(module.DownloadText));
+                });
 
-            module.Progress = 0;
-            module.BytesDownloaded = 0;
-            module.TotalBytesDownload = 0;
-            module.ProgressVisible = Visibility.Hidden;
-            module.OnPropertyChanged(nameof(module.DownloadText));
+                module.Progress = 0;
+                module.BytesDownloaded = 0;
+                module.TotalBytesDownload = 0;
+                module.ProgressVisible = Visibility.Hidden;
+                module.OnPropertyChanged(nameof(module.DownloadText));
+            }
 
             ModuleModel.LoadAssembly(LoadedProject, createdModule);
             module.Enabled = true;
             module.OnPropertyChanged(nameof(module.Enabled));
             module.OnPropertyChanged(nameof(module.Version));
 
-            foreach(var dependency in createdModule.Product.Dependencies)
+            if (!createdModule.IsLocal)
             {
-                var nameVersion = dependency.Split("-");
-                nameVersion[1] = nameVersion[1].Split(";")[0];
-                nameVersion[1] = ModuleList.FirstOrDefault(m => m.Name == nameVersion[0])?.Versions?.FirstOrDefault(v => v.Version.StartsWith(nameVersion[1]))?.Version;
-                InstallModule(nameVersion[0], nameVersion[1], alreadyInstalled);
+                foreach (var dependency in createdModule.Product.Dependencies)
+                {
+                    var nameVersion = dependency.Split("-");
+                    nameVersion[1] = nameVersion[1].Split(";")[0];
+                    nameVersion[1] = ModuleList.FirstOrDefault(m => m.Name == nameVersion[0])?.Versions?.FirstOrDefault(v => v.Version.StartsWith(nameVersion[1]))?.Version;
+                    InstallModule(nameVersion[0], nameVersion[1], alreadyInstalled);
+                }
             }
         }
 
@@ -159,6 +180,11 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             SelectedModule.OnPropertyChanged(nameof(SelectedModule.Enabled));
             SelectedModule.Version = "";
             SelectedModule.OnPropertyChanged(nameof(SelectedModule.Version));
+        }
+
+        public void AddLocal(string name, string path)
+        {
+            InstallModule(name, $"{path};local", new List<string>());
         }
 
         public void SelectedChanged(Module module)
