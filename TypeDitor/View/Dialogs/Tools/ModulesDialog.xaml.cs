@@ -34,34 +34,25 @@ namespace TypeDitor.View.Dialogs.Tools
 
         private void AddLocal_Click(object sender, RoutedEventArgs e)
         {
-            //var folderBrowserDialog = new VistaFolderBrowserDialog();
-            //if (folderBrowserDialog.ShowDialog() == true)
-            //{
-            //    bool found = false;
-            //    var name = "";
-            //    foreach (var file in Directory.GetFiles(folderBrowserDialog.SelectedPath))
-            //    {
-            //        if (file.EndsWith(".sln"))
-            //        {
-            //            found = true;
-            //            name = Path.GetFileNameWithoutExtension(file);
-            //            break;
-            //        }
-            //    }
-            //
-            //    if (!found)
-            //        //TODO: Display Error Popup
-            //        return;
-            //    ModulesDialogViewModel.AddLocal(name, folderBrowserDialog.SelectedPath);
-            //}
-
-
-            var dialog = new OpenFileDialog();
-            dialog.Multiselect = false;
-            dialog.Filter = "TypeD DLL (*.dll)|*.dll";
-            if (dialog.ShowDialog() == true)
+            var folderBrowserDialog = new VistaFolderBrowserDialog();
+            if (folderBrowserDialog.ShowDialog() == true)
             {
-                ModulesDialogViewModel.AddLocal(Path.GetFileNameWithoutExtension(dialog.FileName), dialog.FileName);
+                bool found = false;
+                var name = "";
+                foreach (var file in Directory.GetFiles(folderBrowserDialog.SelectedPath))
+                {
+                    if (file.EndsWith(".sln"))
+                    {
+                        found = true;
+                        name = Path.GetFileNameWithoutExtension(file);
+                        break;
+                    }
+                }
+            
+                if (!found)
+                    //TODO: Display Error Popup
+                    return;
+                ModulesDialogViewModel.AddLocal(name, folderBrowserDialog.SelectedPath);
             }
         }
 
