@@ -126,6 +126,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                     ProgressVisible = Visibility.Hidden
                 };
                 AllModules.Add(module);
+                Modules.Add(module);
             }
             if (string.IsNullOrEmpty(version))
                 version = module.Versions.FirstOrDefault();
