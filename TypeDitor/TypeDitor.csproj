@@ -7,9 +7,6 @@
 		<Product>TypeO</Product>
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
-	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/typer.py dependency -p $(ProjectDir)../&quot;"/>
-	</Target>
 	<ItemGroup>
 		<None Remove="Icons\namespace.png"/>
 		<None Remove="Icons\Run.png"/>
@@ -27,5 +24,12 @@
 	</ItemGroup>
 	<ItemGroup Label="TypeOModules">
 		<ProjectReference Name="TypeD" Include="D:/projects/typeo/typed/TypeD/TypeD.csproj"/>
+		<ProjectReference Name="TypeOCore" Include="D:/projects/typeo/typeocore/TypeOCore/TypeOCore.csproj"/>
+		<ProjectReference Name="TypeDCore" Include="D:/projects/typeo/typeocore/TypeDCore/TypeDCore.csproj"/>
+		<ProjectReference Name="TypeOTK" Include="D:/projects/typeo/typeotk/TypeOTK/TypeOTK.csproj"/>
+		<ProjectReference Name="TypeDTK" Include="D:/projects/typeo/typeotk/TypeDTK/TypeDTK.csproj"/>
 	</ItemGroup>
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/typer.bat dependency -p $(ProjectDir)../&quot;"/>
+	</Target>
 </Project>
