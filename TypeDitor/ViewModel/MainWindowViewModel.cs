@@ -114,8 +114,7 @@ namespace TypeDitor.ViewModel
         // Functions
         public void InitUI(MainWindow mainWindow)
         {
-            var initUIHook = new InitUIHook(LoadedProject);
-            HookModel.Shoot(initUIHook);
+            var initUIHook = HookModel.Shoot(new InitUIHook(LoadedProject));
 
             var menu = initUIHook.Menu;
             var viewMenuItem = new TypeD.View.MenuItem()
