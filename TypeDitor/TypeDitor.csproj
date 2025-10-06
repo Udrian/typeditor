@@ -28,6 +28,9 @@
 		<ProjectReference Name="TypeDCore" Include="../../typeocore/TypeDCore/TypeDCore.csproj"/>
 		<ProjectReference Name="TypeOTK" Include="../../typeotk/TypeOTK/TypeOTK.csproj"/>
 		<ProjectReference Name="TypeDTK" Include="../../typeotk/TypeDTK/TypeDTK.csproj"/>
+		<ProjectReference Name="TypeOBasic2d" Include="../../typeobasic2d/TypeOBasic2d/TypeOBasic2d.csproj"/>
+		<ProjectReference Name="TypeDBasic2d" Include="../../typeobasic2d/TypeDBasic2d/TypeDBasic2d.csproj"/>
+		<ProjectReference Name="TypeODesktop" Include="../../typeodesktop/TypeODesktop/TypeODesktop.csproj"/>
 	</ItemGroup>
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
 		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/typer.bat dependency -p $(ProjectDir)../&quot;"/>
