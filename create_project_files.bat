@@ -1,2 +1,3 @@
 @ECHO OFF
-py typer/typer.py generate -p .
+
+./typer/typer.bat generate -p %~dp0
