@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Windows;
+using Avalonia.Controls;
 using TypeD.Models.Providers.Interfaces;
+using TypeD.ViewModel;
 using TypeDitor.View.Dialogs.Project;
 
 namespace TypeDitor.Commands
@@ -12,7 +13,7 @@ namespace TypeDitor.Commands
         private IRecentProvider RecentProvider { get; set; }
         private IProjectProvider ProjectProvider { get; set; }
 
-        public NewProjectCommand(FrameworkElement element) : base(element)
+        public NewProjectCommand(Control element) : base(element)
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
             ProjectProvider = ResourceModel.Get<IProjectProvider>();
@@ -22,7 +23,7 @@ namespace TypeDitor.Commands
         {
             var newProjectDialog = new NewProjectDialog();
             ProjectCreationProgressDialog progressDialog = null;
-            if (newProjectDialog.ShowDialog() == true)
+            if (await newProjectDialog.ShowDialog<bool>(ViewModelBase.MainWindow) == true)
             {
                 try
                 {

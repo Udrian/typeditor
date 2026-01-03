@@ -1,8 +1,8 @@
-﻿using Ookii.Dialogs.Wpf;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Windows;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using TypeD.ViewModel;
 
 namespace TypeDitor.ViewModel.Dialogs.Project
@@ -35,19 +35,25 @@ namespace TypeDitor.ViewModel.Dialogs.Project
         public string ProjectCSProjectName { get; set; }
 
         // Constructors
-        public NewProjectViewModel(FrameworkElement element) : base(element)
+        public NewProjectViewModel(Control element) : base(element)
         {
             ProjectLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TypeD");
         }
 
         // Functions
-        public void OpenLocation()
+        public async void OpenLocation()
         {
-            var folderBrowserDialog = new VistaFolderBrowserDialog();
-            folderBrowserDialog.SelectedPath = ProjectLocation;
-            if (folderBrowserDialog.ShowDialog() == true)
+            var files = await MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                ProjectLocation = folderBrowserDialog.SelectedPath;
+                Title = "Open Location Folder",
+                SuggestedStartLocation = await MainWindow.StorageProvider.TryGetFolderFromPathAsync(ProjectLocation),
+                AllowMultiple = false
+
+            });
+
+            if (files.Count >= 1)
+            {
+                ProjectLocation = files[0].Path.AbsolutePath;
                 OnPropertyChanged(nameof(ProjectLocation));
             }
         }
@@ -60,7 +66,7 @@ namespace TypeDitor.ViewModel.Dialogs.Project
                 (char.IsLetter(ProjectName.FirstOrDefault()) || ProjectName.StartsWith("_"));
             if (!isValid)
             {
-                MessageBox.Show($"Invalid name '{ProjectName}'");
+                //MessageBox.Show($"Invalid name '{ProjectName}'");
                 return false;
             }
 

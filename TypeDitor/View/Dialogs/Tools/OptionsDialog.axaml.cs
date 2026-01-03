@@ -1,4 +1,4 @@
-﻿using System.Windows;
+﻿using Avalonia.Controls;
 using TypeDitor.ViewModel.Dialogs.Tools;
 
 namespace TypeDitor.View.Dialogs.Tools

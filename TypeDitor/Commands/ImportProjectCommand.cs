@@ -1,8 +1,10 @@
-﻿using Microsoft.Win32;
-using System.IO;
-using System.Windows;
+﻿using System.IO;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Providers.Interfaces;
+using TypeD.ViewModel;
 using TypeDitor.View.Dialogs.Project;
 
 namespace TypeDitor.Commands
@@ -13,13 +15,13 @@ namespace TypeDitor.Commands
         private IRecentProvider RecentProvider { get; set; }
         private IProjectProvider ProjectProvider { get; set; }
 
-        public ImportProjectCommand(FrameworkElement element) : base(element)
+        public ImportProjectCommand(Control element) : base(element)
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
             ProjectProvider = ResourceModel.Get<IProjectProvider>();
         }
 
-        public override void Execute(object param)
+        public async override void Execute(object param)
         {
             var path = "";
             if (param is Recent)
@@ -28,12 +30,16 @@ namespace TypeDitor.Commands
             }
             else
             {
-                var openFileDialog = new OpenFileDialog();
-                openFileDialog.DefaultExt = ".sln";
-                openFileDialog.Filter = "Solution Files (*.sln)|*.sln";
-                if (openFileDialog.ShowDialog() == true)
+                var files = await ViewModelBase.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
-                    path = openFileDialog.FileName;
+                    Title = "Open Project solution file",
+                    AllowMultiple = false,
+                    FileTypeFilter = [FileHelper.SolutionFileType],
+                });
+
+                if (files.Count >= 1)
+                {
+                    path = files[0].Path.AbsolutePath;
                 }
             }
 
@@ -47,7 +53,7 @@ namespace TypeDitor.Commands
                 projectLocation = projectLocation.Substring(0, projectLocation.LastIndexOf(newProjectDialog.ViewModel.ProjectName)).TrimEnd('\\').TrimEnd('/');
                 newProjectDialog.ViewModel.ProjectLocation = projectLocation;
 
-                if (newProjectDialog.ShowDialog() == true)
+                if (await newProjectDialog.ShowDialog<bool>(ViewModelBase.MainWindow))
                 {
                     var name = Path.GetFileNameWithoutExtension(newProjectDialog.ViewModel.ProjectName);
                     var location = this.IsDirectory(newProjectDialog.ViewModel.ProjectLocation) ? newProjectDialog.ViewModel.ProjectLocation : Path.GetDirectoryName(newProjectDialog.ViewModel.ProjectLocation);
@@ -68,7 +74,7 @@ namespace TypeDitor.Commands
                                                                           progressDialog.Close();
                                                                       }
                                                                   });
-                    progressDialog.ShowDialog();
+                    await progressDialog.ShowDialog(ViewModelBase.MainWindow);
                     var newProject = newProjectTask.Result;
                     RecentProvider.Add(newProject.ProjectFilePath, newProject.ProjectName);
                     this.OpenMainWindow(newProject);

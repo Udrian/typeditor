@@ -1,5 +1,5 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using Avalonia.Controls;
+using Avalonia.Interactivity;
 using TypeD.Models.Data;
 using TypeDitor.ViewModel;
 
@@ -19,6 +19,7 @@ namespace TypeDitor.View
             InitializeComponent();
 
             ViewModel = new MainWindowViewModel(this, loadedProject);
+            
             DataContext = ViewModel;
 
             ViewModel.InitUI(this);
@@ -31,7 +32,7 @@ namespace TypeDitor.View
             ViewModel.OpenModulesWindow();
         }
 
-        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private async void Window_Closing(object sender, WindowClosingEventArgs e)
         {
             e.Cancel = await ViewModel.OnClose();
         }

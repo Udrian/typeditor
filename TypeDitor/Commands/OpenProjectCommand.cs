@@ -1,8 +1,10 @@
-﻿using Microsoft.Win32;
-using System;
-using System.Windows;
+﻿using System;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Providers.Interfaces;
+using TypeD.ViewModel;
 using TypeDitor.View.Dialogs.Project;
 
 namespace TypeDitor.Commands
@@ -13,7 +15,7 @@ namespace TypeDitor.Commands
         private IRecentProvider RecentProvider { get; set; }
         private IProjectProvider ProjectProvider { get; set; }
 
-        public OpenProjectCommand(FrameworkElement element) : base(element)
+        public OpenProjectCommand(Control element) : base(element)
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
             ProjectProvider = ResourceModel.Get<IProjectProvider>();
@@ -28,12 +30,16 @@ namespace TypeDitor.Commands
             }
             else
             {
-                var openFileDialog = new OpenFileDialog();
-                openFileDialog.DefaultExt = ".typeo";
-                openFileDialog.Filter = "TypeO Projects (*.typeo)|*.typeo";
-                if (openFileDialog.ShowDialog() == true)
+                var files = await ViewModelBase.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
-                    path = openFileDialog.FileName;
+                    Title = "Open TypeO Project file",
+                    AllowMultiple = false,
+                    FileTypeFilter = [FileHelper.TypeOProjectFileType],
+                });
+
+                if (files.Count >= 1)
+                {
+                    path = files[0].Path.AbsolutePath;
                 }
             }
 

@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
+using Avalonia.Controls;
 using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
 using TypeD.Models.Providers.Interfaces;
@@ -27,8 +27,8 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                     OnPropertyChanged();
                 }
             }
-            private Visibility progressVisible;
-            public Visibility ProgressVisible {
+            private bool progressVisible;
+            public bool ProgressVisible {
                 get => progressVisible;
                 set
                 {
@@ -56,10 +56,10 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
 
         // Properties
         public Module SelectedModule { get; set; }
-        public Visibility SelectedModuleVisibility { get { return SelectedModule == null ? Visibility.Hidden : Visibility.Visible; } }
+        public bool SelectedModuleVisibility { get { return SelectedModule == null ? false : true; } }
 
         // Constructors
-        public ModulesDialogViewModel(FrameworkElement element, TypeD.Models.Data.Project loadedProject) : base(element)
+        public ModulesDialogViewModel(Control element, TypeD.Models.Data.Project loadedProject) : base(element)
         {
             AllModules = new List<Module>();
             Modules = new ObservableCollection<Module>();
@@ -95,7 +95,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                     Version = enabledVersion,
                     Versions = m1.Versions.Select(v => v.Version).ToList(),
                     Progress = 0,
-                    ProgressVisible = Visibility.Hidden
+                    ProgressVisible = false
                 };
                 AllModules.Add(module);
                 Modules.Add(module);
@@ -123,7 +123,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                     Version = "",
                     Versions = new List<string>() { version },
                     Progress = 0,
-                    ProgressVisible = Visibility.Hidden
+                    ProgressVisible = false
                 };
                 AllModules.Add(module);
                 Modules.Add(module);
@@ -132,7 +132,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 version = module.Versions.FirstOrDefault();
             module.Version = version;
 
-            module.ProgressVisible = Visibility.Visible;
+            module.ProgressVisible = true;
             var createdModule = ModuleProvider.Create(module.Name, module.Version);
             ProjectModel.AddModule(LoadedProject, createdModule);
             
@@ -143,20 +143,20 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                     module.Progress = mProgress;
                     module.BytesDownloaded = bytes;
                     module.TotalBytesDownload = totalBytes;
-                    module.OnPropertyChanged(nameof(module.DownloadText));
+                    //module.OnPropertyChanged(nameof(module.DownloadText));
                 });
 
                 module.Progress = 0;
                 module.BytesDownloaded = 0;
                 module.TotalBytesDownload = 0;
-                module.ProgressVisible = Visibility.Hidden;
-                module.OnPropertyChanged(nameof(module.DownloadText));
+                module.ProgressVisible = false;
+                //module.OnPropertyChanged(nameof(module.DownloadText));
             }
 
             ModuleModel.LoadAssembly(LoadedProject, createdModule);
             module.Enabled = true;
-            module.OnPropertyChanged(nameof(module.Enabled));
-            module.OnPropertyChanged(nameof(module.Version));
+            //module.OnPropertyChanged(nameof(module.Enabled));
+            //module.OnPropertyChanged(nameof(module.Version));
 
             if (!createdModule.IsLocal)
             {
@@ -175,9 +175,9 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             if (SelectedModule == null || !SelectedModule.Enabled) return;
             ProjectModel.RemoveModule(LoadedProject, SelectedModule.Name);
             SelectedModule.Enabled = false;
-            SelectedModule.OnPropertyChanged(nameof(SelectedModule.Enabled));
+            //SelectedModule.OnPropertyChanged(nameof(SelectedModule.Enabled));
             SelectedModule.Version = "";
-            SelectedModule.OnPropertyChanged(nameof(SelectedModule.Version));
+            //SelectedModule.OnPropertyChanged(nameof(SelectedModule.Version));
         }
 
         public void AddLocal(string name, string path)

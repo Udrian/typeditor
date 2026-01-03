@@ -1,16 +1,20 @@
-﻿<Window x:Class="TypeDitor.View.Dialogs.Tools.ModulesDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TypeDitor.View.Dialogs.Tools"
+        xmlns:vm="using:TypeDitor.ViewModel.Dialogs.Tools"
         mc:Ignorable="d"
-        Title="Modules" Height="450" Width="800" Initialized="Window_Initialized">
+        xmlns:local="clr-namespace:TypeDitor.View.Dialogs.Tools"
+        x:Class="TypeDitor.View.Dialogs.Tools.ModulesDialog"
+        x:DataType="vm:ModulesDialogViewModel"
+        Title="Modules"
+        Height="450" Width="800"
+        Initialized="Window_Initialized">
     <DockPanel Margin="25">
         <TextBlock DockPanel.Dock="Top" FontSize="32">Modules</TextBlock>
         <Separator DockPanel.Dock="Top" Margin="0,0,0,25"/>
 
-        <Grid DockPanel.Dock="Right" VerticalAlignment="Stretch" Visibility="{Binding SelectedModuleVisibility}">
+        <Grid DockPanel.Dock="Right" VerticalAlignment="Stretch" IsVisible="{Binding SelectedModuleVisibility}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="20"/>
                 <RowDefinition Height="15"/>
@@ -29,7 +33,12 @@
         </Grid>
         <Button Name="AddLocalBtn"  DockPanel.Dock="Right" Content="_+" Width="25" Height="25" FontSize="14" HorizontalAlignment="Right" Margin="0, 0, 10, 0"  VerticalAlignment="Bottom" Click="AddLocal_Click" />
 
-        <ListBox Name="ModuleList" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" ItemsSource="{Binding Modules}" SelectionChanged="ModuleList_SelectionChanged" >
+        <ListBox Name="ModuleList"  ItemsSource="{Binding Modules}" SelectionChanged="ModuleList_SelectionChanged" >
+            <!--<Style Selector="ListBoxItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            </Style>-->
+
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid>
@@ -47,8 +56,8 @@
                         <CheckBox IsChecked="{Binding Enabled}" IsEnabled="False" VerticalAlignment="Center" Grid.RowSpan="2" />
                         <TextBlock Grid.Column="2" Text="{Binding Name}" />
                         <TextBlock Grid.Column="2" Grid.Row="1" FontSize="10" Foreground="DimGray" Text="{Binding Version}" />
-                        <TextBlock Grid.Column="3" Grid.Row="0" HorizontalAlignment="Center" FontSize="10" Foreground="DimGray" Visibility="{Binding ProgressVisible}" Text="{Binding DownloadText}" />
-                        <ProgressBar Grid.Column="3" Grid.Row="1" Visibility="{Binding ProgressVisible}" Value="{Binding Progress}"/>
+                        <TextBlock Grid.Column="3" Grid.Row="0" HorizontalAlignment="Center" FontSize="10" Foreground="DimGray" IsVisible="{Binding ProgressVisible}" Text="{Binding DownloadText}" />
+                        <ProgressBar Grid.Column="3" Grid.Row="1" IsVisible="{Binding ProgressVisible}" Value="{Binding Progress}"/>
                     </Grid>
 
                 </DataTemplate>

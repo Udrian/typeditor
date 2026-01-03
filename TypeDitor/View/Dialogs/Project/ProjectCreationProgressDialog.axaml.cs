@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
+using Avalonia.Controls;
 using TypeD.Helpers;
 
 namespace TypeDitor.View.Dialogs.Project
@@ -26,7 +25,7 @@ namespace TypeDitor.View.Dialogs.Project
 
         private void tbOutputText_TextChanged(object sender, TextChangedEventArgs e)
         {
-            tbOutputText.ScrollToEnd();
+            //tbOutputText.ScrollToEnd();
         }
 
         private void Window_Closed(object sender, EventArgs e)

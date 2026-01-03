@@ -1,8 +1,9 @@
-﻿using Microsoft.Win32;
-using Ookii.Dialogs.Wpf;
-using System;
+﻿using System;
 using System.IO;
-using System.Windows;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using TypeD.ViewModel;
 using TypeDitor.ViewModel.Dialogs.Tools;
 
 namespace TypeDitor.View.Dialogs.Tools
@@ -32,14 +33,22 @@ namespace TypeDitor.View.Dialogs.Tools
             ModulesDialogViewModel.UninstallSelectedModule();
         }
 
-        private void AddLocal_Click(object sender, RoutedEventArgs e)
+        private async void AddLocal_Click(object sender, RoutedEventArgs e)
         {
-            var folderBrowserDialog = new VistaFolderBrowserDialog();
-            if (folderBrowserDialog.ShowDialog() == true)
+
+            var files = await ViewModelBase.MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                Title = "Open Folder",
+                AllowMultiple = false
+            
+            });
+            
+            if (files.Count >= 1)
             {
                 bool found = false;
                 var name = "";
-                foreach (var file in Directory.GetFiles(folderBrowserDialog.SelectedPath))
+                var folder = files[0].Path.AbsolutePath;
+                foreach (var file in Directory.GetFiles(folder))
                 {
                     if (file.EndsWith(".sln"))
                     {
@@ -52,7 +61,7 @@ namespace TypeDitor.View.Dialogs.Tools
                 if (!found)
                     //TODO: Display Error Popup
                     return;
-                ModulesDialogViewModel.AddLocal(name, folderBrowserDialog.SelectedPath);
+                ModulesDialogViewModel.AddLocal(name, folder);
             }
         }
 
@@ -61,7 +70,7 @@ namespace TypeDitor.View.Dialogs.Tools
             await ModulesDialogViewModel.ListModules();
         }
 
-        private void ModuleList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void ModuleList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ModulesDialogViewModel.SelectedChanged(ModuleList.SelectedItem as ModulesDialogViewModel.Module);
         }

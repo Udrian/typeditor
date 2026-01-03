@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Avalonia.Controls;
+using Avalonia.Interactivity;
 using TypeDitor.ViewModel.Dialogs.Project;
 
 namespace TypeDitor.View.Dialogs.Project
@@ -16,7 +17,7 @@ namespace TypeDitor.View.Dialogs.Project
         {
             InitializeComponent();
             ViewModel = new NewProjectViewModel(this);
-            this.DataContext = ViewModel;
+            DataContext = ViewModel;
         }
 
         private void btnOpenLocation_Click(object sender, RoutedEventArgs e)
@@ -29,8 +30,7 @@ namespace TypeDitor.View.Dialogs.Project
             if (!ViewModel.Validate())
                 return;
 
-            DialogResult = true;
-            Close();
+            Close(true);
         }
     }
 }

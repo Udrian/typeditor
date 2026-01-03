@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
+using Avalonia.Controls;
+using Avalonia.Layout;
 
 namespace TypeDitor.View.TypeDock
 {

@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using System.Windows;
+using Avalonia.Controls;
 
 namespace TypeDitor.View.Dialogs.Project
 {

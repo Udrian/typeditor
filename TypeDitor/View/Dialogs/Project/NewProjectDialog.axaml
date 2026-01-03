@@ -1,11 +1,13 @@
-﻿<Window x:Class="TypeDitor.View.Dialogs.Project.NewProjectDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TypeDitor.ViewModel.Dialogs.Project"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:local="clr-namespace:TypeDitor.View.Dialogs.Project"
-        mc:Ignorable="d"
-        Title="New project" Height="450" Width="800">
+        x:Class="TypeDitor.View.Dialogs.Project.NewProjectDialog"
+        x:DataType="vm:NewProjectViewModel"
+        Title="New project">
     <DockPanel Margin="25">
         <TextBlock DockPanel.Dock="Top" FontSize="32">Create new project</TextBlock>
         <Separator DockPanel.Dock="Top" Margin="0,0,0,25"/>

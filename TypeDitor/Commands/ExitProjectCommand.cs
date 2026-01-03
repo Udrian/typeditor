@@ -1,5 +1,6 @@
-﻿using System.Windows;
+﻿using Avalonia.Controls;
 using TypeD.Models.Interfaces;
+using TypeD.ViewModel;
 
 namespace TypeDitor.Commands
 {
@@ -7,14 +8,14 @@ namespace TypeDitor.Commands
     {
         public ISaveModel SaveModel { get; set; }
 
-        public ExitProjectCommand(FrameworkElement element) : base(element)
+        public ExitProjectCommand(Control element) : base(element)
         {
             SaveModel = ResourceModel.Get<ISaveModel>();
         }
 
         public override void Execute(object param)
         {
-            Application.Current.MainWindow.Close();
+            ViewModelBase.MainWindow.Close();
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using TypeD.Models.Interfaces;
 using TypeD.Models.Providers.Interfaces;
 
@@ -9,12 +8,12 @@ namespace TypeDitor.Models
 {
     internal class ResourceModel : IResourceModel, IModel
     {
-        ResourceDictionary Resources { get; set; }
+        Dictionary<string, object> Resources { get; set; }
 
         // Constructors
-        public ResourceModel(ResourceDictionary resources)
+        public ResourceModel()
         {
-            Resources = resources;
+            Resources = new Dictionary<string, object>();
         }
 
         public void Init(IResourceModel resourceModel)
@@ -37,7 +36,7 @@ namespace TypeDitor.Models
         {
             foreach(var keyValue in keyValues)
             {
-                if (!Resources.Contains(keyValue.Item1))
+                if (!Resources.ContainsKey(keyValue.Item1))
                     Resources.Add(keyValue.Item1, keyValue.Item2);
                 else
                     Resources[keyValue.Item1] = keyValue.Item2;
@@ -51,7 +50,7 @@ namespace TypeDitor.Models
 
         public void Add(string key, object value)
         {
-            if(!Resources.Contains(key))
+            if(!Resources.ContainsKey(key))
                 Resources.Add(key, value);
             else
                 Resources[key] = value;
@@ -79,7 +78,7 @@ namespace TypeDitor.Models
 
         public T Get<T>(string key) where T : class
         {
-            if(!Resources.Contains(key))
+            if(!Resources.ContainsKey(key))
                 return null;
             return Resources[key] as T;
         }

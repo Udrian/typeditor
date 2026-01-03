@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
+using Avalonia.Controls;
 using TypeD;
 using TypeD.Helpers;
 using TypeD.Models.Data;
@@ -123,12 +120,12 @@ namespace TypeDitor.ViewModel
                 Items = new List<TypeD.View.MenuItem>(RebuildMainMenuViewItems())
             };
             menu.Items.Add(viewMenuItem);
-
+            
             foreach (var menuItem in menu.Items)
             {
                 ViewHelper.InitMenu(mainWindow.TopMenu, menuItem, this);
             }
-
+            
             foreach(var p in DelayedPanels)
             {
                 OnAddElement(p);
@@ -173,16 +170,16 @@ namespace TypeDitor.ViewModel
             LoadedProject.IsClosing = true;
             if (SaveModel.AnythingToSave)
             {
-                var result = MessageBox.Show("Save before closing?", "Closing...", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-                if (result == MessageBoxResult.Yes)
-                {
-                    await SaveModel.Save(LoadedProject);
-                }
-                else if (result == MessageBoxResult.Cancel)
-                {
-                    LoadedProject.IsClosing = false;
-                    return true;
-                }
+                //var result = MessageBox.Show("Save before closing?", "Closing...", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+                //if (result == MessageBoxResult.Yes)
+                //{
+                //    await SaveModel.Save(LoadedProject);
+                //}
+                //else if (result == MessageBoxResult.Cancel)
+                //{
+                //    LoadedProject.IsClosing = false;
+                //    return true;
+                //}
             }
 
             TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
@@ -190,41 +187,41 @@ namespace TypeDitor.ViewModel
             return false;
         }
 
-        public override void OnPropertyChanged([CallerMemberName] string name = null)
-        {
-            base.OnPropertyChanged(name);
+//        public override void OnPropertyChanged([CallerMemberName] string name = null)
+//        {
+//            base.OnPropertyChanged(name);
 
-            CommandManager.InvalidateRequerySuggested(); //TODO: Maybe find a better way to get this notified
+            //CommandManager.InvalidateRequerySuggested(); //TODO: Maybe find a better way to get this notified
 
-            if (name == "Panels")
-            {
-                foreach (var item in MainWindow.TopMenu.Items)
-                {
-                    if (item is System.Windows.Controls.MenuItem && (item as System.Windows.Controls.MenuItem).Header.ToString() == "_View")
-                    {
-                        (item as System.Windows.Controls.MenuItem).Items.Clear();
-                        break;
-                    }
-                }
-
-                var menu = new TypeD.View.Menu()
-                {
-                    Items = new List<TypeD.View.MenuItem>()
-                    {
-                        new TypeD.View.MenuItem()
-                        {
-                            Name = "_View",
-                            Items = new List<TypeD.View.MenuItem>(RebuildMainMenuViewItems())
-                        }
-                    }
-                };
-
-                foreach (var menuItem in menu.Items)
-                {
-                    ViewHelper.InitMenu(MainWindow.TopMenu, menuItem, this);
-                }
-            }
-        }
+            //if (name == "Panels")
+            //{
+            //    foreach (var item in MainWindow.TopMenu.Items)
+            //    {
+            //        if (item is Avalonia.Controls.MenuItem && (item as Avalonia.Controls.MenuItem).Header.ToString() == "_View")
+            //        {
+            //            (item as Avalonia.Controls.MenuItem).Items.Clear();
+            //            break;
+            //        }
+            //    }
+//
+            //    var menu = new TypeD.View.Menu()
+            //    {
+            //        Items = new List<TypeD.View.MenuItem>()
+            //        {
+            //            new TypeD.View.MenuItem()
+            //            {
+            //                Name = "_View",
+            //                Items = new List<TypeD.View.MenuItem>(RebuildMainMenuViewItems())
+            //            }
+            //        }
+            //    };
+//
+            //    foreach (var menuItem in menu.Items)
+            //    {
+            //        ViewHelper.InitMenu(MainWindow.TopMenu, menuItem, this);
+            //    }
+            //}
+//        }
 
         public override void OnAddElement(object element)
         {
@@ -236,18 +233,18 @@ namespace TypeDitor.ViewModel
                     DelayedPanels.Add(panel);
                     return;
                 }
-
+            
                 if(MainWindow.DockRoot.Count == 0)
                 {
                     MainWindow.DockRoot.AddPanel(panel);
                     return;
                 }
-
+            
                 var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
                 var panelSetting = setting.Panels.Value.Find(p => p.ID == panel.ID);
                 if (panelSetting == null)
                     return;
-
+            
                 var root = MainWindow.DockRoot;
                 if (!string.IsNullOrEmpty(panelSetting.Parent))
                 {
@@ -255,33 +252,33 @@ namespace TypeDitor.ViewModel
                     if (root == null)
                         return;
                 }
-
+            
                 root.AddPanel(panel, panelSetting.Dock, panelSetting.Length, panelSetting.Span);
             }
         }
 
         public override void OnRemoveElement(object element)
         {
-            if (element is TypeD.View.Panel)
-            {
-                //TODO: This is not the most efficent way to do this...
-                MainWindow.DockPanelRoot.Children.Remove(MainWindow.DockRoot);
-                MainWindow.DockRoot = new View.TypeDock.TypeDockRoot();
-                MainWindow.DockRoot.Margin = new Thickness(5);
-                MainWindow.DockPanelRoot.Children.Add(MainWindow.DockRoot);
-
-                foreach (var panel in PanelModel.GetPanels())
-                {
-                    var parent = VisualTreeHelper.GetParent(panel.PanelView);
-                    if(parent!= null)
-                        (parent as System.Windows.Controls.Panel).Children.Remove(panel.PanelView);
-                }
-                foreach (var panel in PanelModel.GetPanels())
-                {
-                    if (panel.Open)
-                        OnAddElement(panel);
-                }
-            }
+            //if (element is TypeD.View.Panel)
+            //{
+            //    //TODO: This is not the most efficent way to do this...
+            //    MainWindow.DockPanelRoot.Children.Remove(MainWindow.DockRoot);
+            //    MainWindow.DockRoot = new View.TypeDock.TypeDockRoot();
+            //    MainWindow.DockRoot.Margin = new Thickness(5);
+            //    MainWindow.DockPanelRoot.Children.Add(MainWindow.DockRoot);
+            //
+            //    foreach (var panel in PanelModel.GetPanels())
+            //    {
+            //        var parent = VisualTreeHelper.GetParent(panel.PanelView);
+            //        if(parent!= null)
+            //            (parent as Avalonia.Controls.Panel).Children.Remove(panel.PanelView);
+            //    }
+            //    foreach (var panel in PanelModel.GetPanels())
+            //    {
+            //        if (panel.Open)
+            //            OnAddElement(panel);
+            //    }
+            //}
         }
     }
 }

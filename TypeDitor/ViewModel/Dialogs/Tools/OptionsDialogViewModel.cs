@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using Avalonia.Controls;
 using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
@@ -33,7 +32,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         IHookModel HookModel { get; set; }
 
         // Constructors
-        public OptionsDialogViewModel(FrameworkElement element, TypeD.Models.Data.Project loadedProject) : base(element)
+        public OptionsDialogViewModel(Control element, TypeD.Models.Data.Project loadedProject) : base(element)
         {
             LoadedProject = loadedProject;
 

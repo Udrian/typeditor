@@ -1,12 +1,12 @@
-﻿<Window x:Class="TypeDitor.View.Dialogs.Project.OpenProjectProgressDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="400"
         xmlns:local="clr-namespace:TypeDitor.View.Dialogs.Project"
-        mc:Ignorable="d"
-        WindowStyle="None"
-        Title="Opening project..." Height="150" Width="500">
+        x:Class="TypeDitor.View.Dialogs.Project.ProjectCreationProgressDialog"
+        Title="Creating project..."
+        Closed="Window_Closed">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="50"/>
@@ -15,12 +15,14 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="25" />
-            <RowDefinition Height="50" />
             <RowDefinition Height="*" />
             <RowDefinition Height="25" />
-            <RowDefinition Height="25" />
+            <RowDefinition Height="50" />
         </Grid.RowDefinitions>
-        <ProgressBar Grid.Column="1" Grid.Row="3" Value="{Binding Progress}"/>
-        <Label Grid.Column="1" Grid.Row="1" FontSize="16">Opening project...</Label>
+        <ProgressBar Grid.Column="1" Grid.Row="2" Value="{Binding Progress}"/>
+        <DockPanel Grid.Column="1" Grid.Row="1">
+            <Label DockPanel.Dock="Top" FontSize="16">Creating project...</Label>
+            <TextBox Name="tbOutputText" TextChanged="tbOutputText_TextChanged" IsReadOnly="True" Text="{Binding OutputText}"/>
+        </DockPanel>
     </Grid>
 </Window>

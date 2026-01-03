@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Windows;
+using Avalonia.Controls;
 using TypeD.Models.Data;
 using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
@@ -7,7 +7,7 @@ using TypeDitor.Commands;
 
 namespace TypeDitor.ViewModel
 {
-    internal class SplashViewModel : ViewModelBase 
+    internal partial class SplashViewModel : ViewModelBase
     {
         // Providers
         private IRecentProvider RecentProvider { get; set; }
@@ -18,7 +18,7 @@ namespace TypeDitor.ViewModel
         public NewProjectCommand NewProjectCommand { get; set; }
 
         // Constructors
-        public SplashViewModel(FrameworkElement element) : base(element)
+        public SplashViewModel(Control element) : base(element)
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
 

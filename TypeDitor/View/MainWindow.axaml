@@ -1,11 +1,15 @@
-﻿<Window x:Class="TypeDitor.View.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TypeDitor.View" xmlns:typedock="clr-namespace:TypeDitor.View.TypeDock"
-        mc:Ignorable="d"
-        Title="{Binding LoadedProject.ProjectName}" Width="{Binding Path=SizeX, Mode=TwoWay}" Height="{Binding Path=SizeY, Mode=TwoWay}" WindowState="{Binding Path=Maximized, Mode=TwoWay}"  Closing="Window_Closing">
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:local="clr-namespace:TypeDitor.View" 
+        x:Class="TypeDitor.View.MainWindow"
+        xmlns:typedock="clr-namespace:TypeDitor.View.TypeDock"
+        Title="{Binding LoadedProject.ProjectName}"
+        Width="{Binding Path=SizeX, Mode=TwoWay}" Height="{Binding Path=SizeY, Mode=TwoWay}"
+        WindowState="{Binding Path=Maximized, Mode=TwoWay}"
+        Closing="Window_Closing">
     <DockPanel Name="DockPanelRoot">
         <Menu DockPanel.Dock="Top" Name="_TopMenu">
             <MenuItem Header="_File">
@@ -33,17 +37,22 @@
                 <MenuItem Header="_Options" Click="OptionsMenuItem_Click"/>
             </MenuItem>
         </Menu>
-        <ToolBar DockPanel.Dock="Top">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" DockPanel.Dock="Top">
             <Button Command="{Binding RunProjectCommand}" CommandParameter="{Binding LoadedProject}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Icons/Run.png" Width="8" Height="8"/>
                     <TextBlock Margin="5,0,0,0">Run</TextBlock>
                 </StackPanel>
             </Button>
-        </ToolBar>
-        <StatusBar DockPanel.Dock="Bottom">
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
+            <StackPanel.Styles>
+                <Style Selector="">
+                    <Setter Property="Background" Value="{DynamicResource TextControlSelectionHighlightColor}"/>
+                </Style>
+            </StackPanel.Styles>
             <Label Content="{Binding LoadedProject.Location}"/>
-        </StatusBar>
+        </StackPanel>
         <typedock:TypeDockRoot x:Name="DockRoot" Margin="5"/>
     </DockPanel>
 </Window>
