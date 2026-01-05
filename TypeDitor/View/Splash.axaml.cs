@@ -10,21 +10,17 @@ namespace TypeDitor.View
     /// </summary>
     public partial class Splash : Window
     {
-        SplashViewModel ViewModel { get; set; }
+        private SplashViewModel ViewModel { get { return DataContext as SplashViewModel; } }
 
         public Splash()
         {
             InitializeComponent();
-            ViewModel = new SplashViewModel(this);
-            DataContext = ViewModel;
-
-            RecentList.ItemsSource = ViewModel.GetRecents();
+            DataContext = new SplashViewModel();
         }
 
         private void RecentList_DoubleTapped(object sender, TappedEventArgs e)
         {
-            if (sender is not ListBox lbRecent) return;
-            if (lbRecent.SelectedItem is not Recent recent) return;
+            if (RecentList.SelectedItem is not Recent recent) return;
             ViewModel.OpenProjectCommand.Execute(recent);
         }
     }

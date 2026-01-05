@@ -1,5 +1,4 @@
-﻿using Avalonia.Controls;
-using TypeD.Models.Data;
+﻿using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
 
 namespace TypeDitor.Commands
@@ -10,7 +9,7 @@ namespace TypeDitor.Commands
         private IProjectModel ProjectModel { get; set; }
         public ISaveModel SaveModel { get; set; }
 
-        public BuildProjectCommand(Control element) : base(element)
+        public BuildProjectCommand() : base()
         {
             ProjectModel = ResourceModel.Get<IProjectModel>();
             SaveModel = ResourceModel.Get<ISaveModel>();

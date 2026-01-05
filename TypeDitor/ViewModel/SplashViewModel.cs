@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Avalonia.Controls;
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using TypeD.Models.Data;
 using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
@@ -13,24 +13,33 @@ namespace TypeDitor.ViewModel
         private IRecentProvider RecentProvider { get; set; }
 
         // Commands
-        public ImportProjectCommand ImportProjectCommand { get; set; }
-        public OpenProjectCommand OpenProjectCommand { get; set; }
-        public NewProjectCommand NewProjectCommand { get; set; }
+        [ObservableProperty]
+        private ImportProjectCommand _importProjectCommand;
+        [ObservableProperty]
+        private OpenProjectCommand _openProjectCommand;
+        [ObservableProperty]
+        private NewProjectCommand _newProjectCommand;
+
+        // Properties
+        [ObservableProperty]
+        private ObservableCollection<Recent> _recents;
 
         // Constructors
-        public SplashViewModel(Control element) : base(element)
+        public SplashViewModel() : base()
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
 
-            ImportProjectCommand = new ImportProjectCommand(element);
-            OpenProjectCommand = new OpenProjectCommand(element);
-            NewProjectCommand = new NewProjectCommand(element);
+            ImportProjectCommand = new ImportProjectCommand();
+            OpenProjectCommand = new OpenProjectCommand();
+            NewProjectCommand = new NewProjectCommand();
+
+            Recents = GetRecents();
         }
 
         // Functions
-        public IEnumerable<Recent> GetRecents()
+        private ObservableCollection<Recent> GetRecents()
         {
-            return RecentProvider.Get();
+            return new ObservableCollection<Recent>(RecentProvider.Get());
         }
     }
 }

@@ -8,6 +8,11 @@
         x:Class="TypeDitor.View.Dialogs.Project.NewProjectDialog"
         x:DataType="vm:NewProjectViewModel"
         Title="New project">
+
+    <Design.DataContext>
+        <vm:NewProjectViewModel/>
+    </Design.DataContext>
+
     <DockPanel Margin="25">
         <TextBlock DockPanel.Dock="Top" FontSize="32">Create new project</TextBlock>
         <Separator DockPanel.Dock="Top" Margin="0,0,0,25"/>

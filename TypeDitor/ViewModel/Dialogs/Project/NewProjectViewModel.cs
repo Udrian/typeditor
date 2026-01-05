@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using TypeD.ViewModel;
 
@@ -35,7 +34,7 @@ namespace TypeDitor.ViewModel.Dialogs.Project
         public string ProjectCSProjectName { get; set; }
 
         // Constructors
-        public NewProjectViewModel(Control element) : base(element)
+        public NewProjectViewModel() : base()
         {
             ProjectLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TypeD");
         }

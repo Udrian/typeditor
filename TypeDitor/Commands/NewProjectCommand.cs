@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Avalonia.Controls;
 using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
 using TypeDitor.View.Dialogs.Project;
@@ -13,7 +12,7 @@ namespace TypeDitor.Commands
         private IRecentProvider RecentProvider { get; set; }
         private IProjectProvider ProjectProvider { get; set; }
 
-        public NewProjectCommand(Control element) : base(element)
+        public NewProjectCommand() : base()
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
             ProjectProvider = ResourceModel.Get<IProjectProvider>();

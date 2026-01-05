@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using TypeD.Helpers;
 using TypeD.Models.Data;
@@ -15,7 +14,7 @@ namespace TypeDitor.Commands
         private IRecentProvider RecentProvider { get; set; }
         private IProjectProvider ProjectProvider { get; set; }
 
-        public ImportProjectCommand(Control element) : base(element)
+        public ImportProjectCommand() : base()
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
             ProjectProvider = ResourceModel.Get<IProjectProvider>();

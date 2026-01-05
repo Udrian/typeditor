@@ -1,5 +1,4 @@
 ﻿using System;
-using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using TypeD.Helpers;
 using TypeD.Models.Data;
@@ -15,7 +14,7 @@ namespace TypeDitor.Commands
         private IRecentProvider RecentProvider { get; set; }
         private IProjectProvider ProjectProvider { get; set; }
 
-        public OpenProjectCommand(Control element) : base(element)
+        public OpenProjectCommand() : base()
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
             ProjectProvider = ResourceModel.Get<IProjectProvider>();

@@ -4,9 +4,9 @@
              xmlns:local="using:TypeDitor"
              RequestedThemeVariant="Default">
             
-    <!--<Application.DataTemplates>
+    <Application.DataTemplates>
         <local:ViewLocator/>
-    </Application.DataTemplates>-->
+    </Application.DataTemplates>
 
     <Application.Styles>
         <FluentTheme />

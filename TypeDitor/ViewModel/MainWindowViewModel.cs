@@ -97,15 +97,15 @@ namespace TypeDitor.ViewModel
             SettingModel = ResourceModel.Get<ISettingModel>();
             PanelModel = ResourceModel.Get<IPanelModel>();
             
-            BuildProjectCommand = new BuildProjectCommand(mainWindow);
-            ExitProjectCommand = new ExitProjectCommand(mainWindow);
-            NewProjectCommand = new NewProjectCommand(mainWindow);
-            ImportProjectCommand = new ImportProjectCommand(mainWindow);
-            OpenProjectCommand = new OpenProjectCommand(mainWindow);
-            RunProjectCommand = new RunProjectCommand(mainWindow);
-            SaveProjectCommand = new SaveProjectCommand(mainWindow);
-            OpenPanelCommand = new OpenPanelCommand(mainWindow);
-            ClosePanelCommand = new ClosePanelCommand(mainWindow);
+            BuildProjectCommand = new BuildProjectCommand();
+            ExitProjectCommand = new ExitProjectCommand();
+            NewProjectCommand = new NewProjectCommand();
+            ImportProjectCommand = new ImportProjectCommand();
+            OpenProjectCommand = new OpenProjectCommand();
+            RunProjectCommand = new RunProjectCommand();
+            SaveProjectCommand = new SaveProjectCommand();
+            OpenPanelCommand = new OpenPanelCommand();
+            ClosePanelCommand = new ClosePanelCommand();
         }
 
         // Functions

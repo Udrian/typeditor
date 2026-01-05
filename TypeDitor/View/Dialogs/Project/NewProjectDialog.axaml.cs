@@ -10,14 +10,13 @@ namespace TypeDitor.View.Dialogs.Project
     public partial class NewProjectDialog : Window
     {
         // ViewModel
-        internal NewProjectViewModel ViewModel { get; set; }
+        internal NewProjectViewModel ViewModel { get { return DataContext as NewProjectViewModel; } }
 
         // Constructors
         public NewProjectDialog()
         {
             InitializeComponent();
-            ViewModel = new NewProjectViewModel(this);
-            DataContext = ViewModel;
+            DataContext = new NewProjectViewModel();
         }
 
         private void btnOpenLocation_Click(object sender, RoutedEventArgs e)

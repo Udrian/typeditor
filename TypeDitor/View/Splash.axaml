@@ -23,7 +23,7 @@
         
         <StackPanel Orientation="Vertical" Margin="0, 0, 10, 0">
             <TextBlock FontSize="16" Margin="0, 0, 0, 10">Open recent...</TextBlock>
-            <ListBox Name="RecentList" DoubleTapped="RecentList_DoubleTapped">
+            <ListBox Name="RecentList" DoubleTapped="RecentList_DoubleTapped" ItemsSource="{Binding Recents}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>

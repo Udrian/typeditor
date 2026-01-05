@@ -1,5 +1,4 @@
-﻿using Avalonia.Controls;
-using TypeD.Models.Interfaces;
+﻿using TypeD.Models.Interfaces;
 
 namespace TypeDitor.Commands
 {
@@ -9,7 +8,7 @@ namespace TypeDitor.Commands
         IPanelModel PanelModel { get; set; }
 
         // Constructors
-        public OpenPanelCommand(Control element) : base(element)
+        public OpenPanelCommand() : base()
         {
             PanelModel = ResourceModel.Get<IPanelModel>();
         }
