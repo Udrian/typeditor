@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.OpenGL;
 using System;
 
 namespace TypeDitor
@@ -17,6 +18,7 @@ namespace TypeDitor
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .WithInterFont()
+                .With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Wgl], WglProfiles = [new(GlProfileType.OpenGL, 4, 6)] })
                 .LogToTrace();
     }
 }
