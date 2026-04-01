@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Avalonia.Controls;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using TypeD;
 using TypeD.Helpers;
 using TypeD.Models.Data;
@@ -170,58 +172,24 @@ namespace TypeDitor.ViewModel
             LoadedProject.IsClosing = true;
             if (SaveModel.AnythingToSave)
             {
-                //var result = MessageBox.Show("Save before closing?", "Closing...", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-                //if (result == MessageBoxResult.Yes)
-                //{
-                //    await SaveModel.Save(LoadedProject);
-                //}
-                //else if (result == MessageBoxResult.Cancel)
-                //{
-                //    LoadedProject.IsClosing = false;
-                //    return true;
-                //}
+                var box = MessageBoxManager.GetMessageBoxStandard("Closing...", "Save before closing?", ButtonEnum.YesNoCancel, Icon.Question);
+                var result = await box.ShowAsPopupAsync(MainWindow);
+
+                if (result == ButtonResult.Yes)
+                {
+                    await SaveModel.Save(LoadedProject);
+                }
+                else if (result == ButtonResult.Cancel)
+                {
+                    LoadedProject.IsClosing = false;
+                    return true;
+                }
             }
 
             TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
             HookModel.Shoot(new ExitHook() { Project = LoadedProject });
             return false;
         }
-
-//        public override void OnPropertyChanged([CallerMemberName] string name = null)
-//        {
-//            base.OnPropertyChanged(name);
-
-            //CommandManager.InvalidateRequerySuggested(); //TODO: Maybe find a better way to get this notified
-
-            //if (name == "Panels")
-            //{
-            //    foreach (var item in MainWindow.TopMenu.Items)
-            //    {
-            //        if (item is Avalonia.Controls.MenuItem && (item as Avalonia.Controls.MenuItem).Header.ToString() == "_View")
-            //        {
-            //            (item as Avalonia.Controls.MenuItem).Items.Clear();
-            //            break;
-            //        }
-            //    }
-//
-            //    var menu = new TypeD.View.Menu()
-            //    {
-            //        Items = new List<TypeD.View.MenuItem>()
-            //        {
-            //            new TypeD.View.MenuItem()
-            //            {
-            //                Name = "_View",
-            //                Items = new List<TypeD.View.MenuItem>(RebuildMainMenuViewItems())
-            //            }
-            //        }
-            //    };
-//
-            //    foreach (var menuItem in menu.Items)
-            //    {
-            //        ViewHelper.InitMenu(MainWindow.TopMenu, menuItem, this);
-            //    }
-            //}
-//        }
 
         public override void OnAddElement(object element)
         {
@@ -234,31 +202,18 @@ namespace TypeDitor.ViewModel
                     return;
                 }
             
-                if(MainWindow.DockRoot.Count == 0)
-                {
-                    MainWindow.DockRoot.AddPanel(panel);
-                    return;
-                }
-            
                 var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
                 var panelSetting = setting.Panels.Value.Find(p => p.ID == panel.ID);
                 if (panelSetting == null)
                     return;
-            
-                var root = MainWindow.DockRoot;
-                if (!string.IsNullOrEmpty(panelSetting.Parent))
-                {
-                    root = MainWindow.DockRoot.FindRootWithID(panelSetting.Parent);
-                    if (root == null)
-                        return;
-                }
-            
-                root.AddPanel(panel, panelSetting.Dock, panelSetting.Length, panelSetting.Span);
+
+                MainWindow.DockRoot.AddPanel(panel, panelSetting);
             }
         }
 
         public override void OnRemoveElement(object element)
         {
+            //TODO: Find a way to remove panels through Avalonia Dock
             //if (element is TypeD.View.Panel)
             //{
             //    //TODO: This is not the most efficent way to do this...

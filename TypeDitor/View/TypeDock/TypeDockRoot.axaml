@@ -5,30 +5,12 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:local="clr-namespace:TypeDitor.View.TypeDock"
              x:Class="TypeDitor.View.TypeDock.TypeDockRoot">
-    <Grid x:Name="DockRoot">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
-
-        <Border Name="RootBorder" BorderThickness="1" BorderBrush="Black" Grid.Column="2" Grid.Row="2">
-            <Grid x:Name="InnerGrid" >
-            <Grid.RowDefinitions>
-                <RowDefinition Height="20"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Padding="5,0,0,0" Background="LightGray" Text="{Binding PanelTitel}" />
-            </Grid>
-        </Border>
-    </Grid>
+    <DockControl x:Name="DockControl" InitializeLayout="True" InitializeFactory="True">
+        <DockControl.Factory>
+            <Factory />
+        </DockControl.Factory>
+        <RootDock x:Name="DockRoot" IsCollapsable="True">
+            <DockDock x:Name="DockMain" Id="DockMain"></DockDock>
+        </RootDock>
+    </DockControl>
 </UserControl>

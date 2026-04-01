@@ -1,26 +1,18 @@
-﻿using System.ComponentModel;
-using Avalonia.Controls;
-using Avalonia.Layout;
+﻿using Avalonia.Controls;
+using Dock.Model;
+using Dock.Model.Avalonia.Controls;
+using Dock.Model.Avalonia.Core;
+using Dock.Model.Core;
+using TypeD.Models.Data.SettingContexts;
 
 namespace TypeDitor.View.TypeDock
 {
     /// <summary>
     /// Interaction logic for TypeDockRoot.xaml
     /// </summary>
-    public partial class TypeDockRoot : UserControl, INotifyPropertyChanged
+    public partial class TypeDockRoot : UserControl
     {
         // Properties
-        public string PanelTitel {
-            get => Panel?.Title ?? "";
-            set
-            {
-                Panel.Title = value;
-                NotifyPropertyChanged("PanelTitel");
-            }
-        }
-        public TypeD.View.Panel Panel { get; set; }
-
-        public int Count { get; private set; }
 
         // Constructors
         public TypeDockRoot()
@@ -29,138 +21,100 @@ namespace TypeDitor.View.TypeDock
             InitializeComponent();
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void NotifyPropertyChanged(string propName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
-        }
-
         // Functions
-        public TypeDockRoot FindRootWithID(string id)
+        public void AddPanel(TypeD.View.Panel panel, MainWindowSettingContext.Panel panelSetting)
         {
-            if (Panel.ID == id)
-                return this;
-
-            foreach(var child in DockRoot.Children)
+            //TODO: I should rewrite this whole thing and use the Avalonia Dock layout save and plugin system.
+            var tool = new Tool()
             {
-                if (child is not TypeDockRoot)
-                    continue;
-                var root = child as TypeDockRoot;
-
-                var retVal = root.FindRootWithID(id);
-                if(retVal != null)
-                    return retVal;
-            }
-
-            return null;
-        }
-
-        public void AddPanel(TypeD.View.Panel panel)
-        {
-            Count++;
-            Grid.SetColumn(panel.PanelView, 0);
-            Grid.SetRow(panel.PanelView, 1);
-
-            InnerGrid.Children.Add(panel.PanelView);
-            Panel = panel;
-            NotifyPropertyChanged("PanelTitel");
-        }
-
-        public TypeDockRoot AddPanel(TypeD.View.Panel panel, Dock dock, int? length = null, bool span = false)
-        {
-            Count++;
-            var newTypeDockRoot = new TypeDockRoot();
-            var leftright = false;
-            var createGridSpliter = true;
-
-            int column = -1;
-            int row = -1;
-            switch (dock)
+                Id = panel.ID,
+                Title = panel.Title,
+                Content = panel.PanelView
+            };
+            var toolDock = new ToolDock()
             {
-                case Dock.Left:
-                    leftright = true;
-                    column = 0;
+                Id = $"{panel.ID}-dock",
+                Alignment = panelSetting.Dock,
+                Proportion = panelSetting.Length,
+                VisibleDockables = DockControl.Factory.CreateList<IDockable>(tool),
+                ActiveDockable = tool
+            };
 
-                    break;
-                case Dock.Top:
-                    leftright = false;
-                    row = 0;
-
-                    break;
-                case Dock.Right:
-                    leftright = true;
-                    column = 4;
-
-                    break;
-                case Dock.Bottom:
-                    leftright = false;
-                    row = 4;
-
-                    break;
-            }
-
-            if(leftright)
+            if(string.IsNullOrEmpty(panelSetting.Parent))
             {
-                Grid.SetColumn(newTypeDockRoot, column);
-                DockRoot.ColumnDefinitions[column].MinWidth = 50;
-                DockRoot.RowDefinitions[2].MinHeight = 50;
-                if (span)
-                    Grid.SetRowSpan(newTypeDockRoot, 5);
-                else
-                    Grid.SetRow(newTypeDockRoot, 2);
+                var proportionalDock = new ProportionalDock()
+                {
+                    Orientation = Orientation.Horizontal,
+                    VisibleDockables = DockControl.Factory.CreateList<IDockable>(toolDock)
+                };
+                toolDock.Owner = proportionalDock;
+                proportionalDock.Owner = DockMain;
+                DockMain.Add(proportionalDock);
             }
             else
             {
-                Grid.SetRow(newTypeDockRoot, row);
-                DockRoot.ColumnDefinitions[2].MinWidth = 50;
-                DockRoot.RowDefinitions[row].MinHeight = 50;
-                if (span)
-                    Grid.SetColumnSpan(newTypeDockRoot, 5);
-                else
-                    Grid.SetColumn(newTypeDockRoot, 2);
-            }
-
-            if(createGridSpliter)
-            {
-                GridSplitter gridSplitter = new GridSplitter();
-                gridSplitter.VerticalAlignment = VerticalAlignment.Stretch;
-                gridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
-
-                if (leftright)
+                var parentDock = DockControl.Factory.FindDockable(DockRoot, d => d.Id == $"{panelSetting.Parent}-dock") as ToolDock;
+                if(parentDock != null )
                 {
-                    gridSplitter.Width = 5;
-                    Grid.SetColumn(gridSplitter, dock == Dock.Left ? column + 1 : column - 1);
-                    if (span)
-                        Grid.SetRowSpan(gridSplitter, 5);
+                    if (panelSetting.Dock == Alignment.Unset)
+                    {
+                        parentDock.VisibleDockables.Add(tool);
+                    }
                     else
-                        Grid.SetRow(gridSplitter, 2);
+                    {
+                        var ownerDock = parentDock.Owner as ProportionalDock;
+                        if (ownerDock == null) return;
+                        if (((panelSetting.Dock == Alignment.Left || panelSetting.Dock == Alignment.Right) && ownerDock.Orientation == Orientation.Horizontal) ||
+                            ((panelSetting.Dock == Alignment.Top || panelSetting.Dock == Alignment.Bottom) && ownerDock.Orientation == Orientation.Vertical))
+                        {
+                            if (panelSetting.Dock == Alignment.Right || panelSetting.Dock == Alignment.Bottom)
+                            {
+                                ownerDock.VisibleDockables.Add(new ProportionalDockSplitter());
+                                ownerDock.VisibleDockables.Add(toolDock);
+                            }
+                            else
+                            {
+                                ownerDock.VisibleDockables.Insert(0, new ProportionalDockSplitter());
+                                ownerDock.VisibleDockables.Insert(0, toolDock);
+                            }
+                            toolDock.Owner = ownerDock;
+                        }
+                        else
+                        {
+                            var proportionalDock = new ProportionalDock()
+                            {
+                                Orientation = (panelSetting.Dock == Alignment.Left || panelSetting.Dock == Alignment.Right) ? Orientation.Horizontal : Orientation.Vertical
+                            };
+                            if (panelSetting.Dock == Alignment.Right || panelSetting.Dock == Alignment.Bottom)
+                            {
+                                proportionalDock.VisibleDockables = DockControl.Factory.CreateList<IDockable>(
+                                    ownerDock,
+                                    new ProportionalDockSplitter(),
+                                    toolDock);
+                            }
+                            else
+                            {
+                                proportionalDock.VisibleDockables = DockControl.Factory.CreateList<IDockable>(
+                                    toolDock,
+                                    new ProportionalDockSplitter(),
+                                    ownerDock);
+                            }
+
+                            toolDock.Owner = proportionalDock;
+                            proportionalDock.Owner = ownerDock.Owner;
+                            ownerDock.Owner = proportionalDock;
+
+                            for(int i = 0; i < (proportionalDock.Owner as DockBase).VisibleDockables.Count; i++)
+                            {
+                                if((proportionalDock.Owner as DockBase).VisibleDockables[i] == ownerDock)
+                                {
+                                    (proportionalDock.Owner as DockBase).VisibleDockables[i] = proportionalDock;
+                                }
+                            }
+                        }
+                    }
                 }
-                else
-                {
-                    gridSplitter.Height = 5;
-                    Grid.SetRow(gridSplitter, dock == Dock.Top ? row + 1 : row - 1);
-                    if (span)
-                        Grid.SetColumnSpan(gridSplitter, 5);
-                    else
-                        Grid.SetColumn(gridSplitter, 2);
-                }
-
-                DockRoot.Children.Add(gridSplitter);
             }
-
-            if(column >= 0 && length != null)
-            {
-                DockRoot.ColumnDefinitions[column].Width = new GridLength(length.Value);
-            }
-            if (row >= 0 && length != null)
-            {
-                DockRoot.RowDefinitions[row].Height = new GridLength(length.Value);
-            }
-
-            newTypeDockRoot.AddPanel(panel);
-            DockRoot.Children.Add(newTypeDockRoot);
-
-            return newTypeDockRoot;
         }
     }
 }

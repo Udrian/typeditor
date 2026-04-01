@@ -10,6 +10,9 @@ namespace TypeDitor.View
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Properties
+        private bool CanClose { get; set; } = false;
+
         // ViewModel
         MainWindowViewModel ViewModel { get; set; }
 
@@ -34,7 +37,15 @@ namespace TypeDitor.View
 
         private async void Window_Closing(object sender, WindowClosingEventArgs e)
         {
-            e.Cancel = await ViewModel.OnClose();
+            if (CanClose) return;
+
+            e.Cancel = true;
+            var result = await ViewModel.OnClose();
+            if(!result)
+            {
+                CanClose = true;
+                this.Close();
+            }
         }
 
         private void OptionsMenuItem_Click(object sender, RoutedEventArgs e)

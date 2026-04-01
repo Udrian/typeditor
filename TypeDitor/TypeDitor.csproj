@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net9.0</TargetFramework>
@@ -16,27 +16,29 @@
 		<PackageReference Include="Avalonia.Desktop" Version="11.3.9"/>
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9"/>
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.9"/>
-		<!--<PackageReference Include="Dock.Avalonia" Version="11.3.8" />
-    	<PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.8" />
-    	<PackageReference Include="Dock.Model.Mvvm" Version="11.3.8" />-->
+		<PackageReference Include="Dock.Avalonia" Version="11.3.9" />
+        <PackageReference Include="Dock.Model.Avalonia" Version="11.3.9" />
+        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.9" />
+        <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.9" />
 		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-		<PackageReference Include="Avalonia.Diagnostics" Version="11.3.9">
+		<PackageReference Include="Avalonia.Diagnostics" Version="11.3.11">
 			<IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
 			<PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
 		</PackageReference>
     	<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    	<PackageReference Include="MessageBox.Avalonia" Version="3.3.1.1" />
 	</ItemGroup>
 	<ItemGroup Label="TypeOModules">
-		<ProjectReference Name="TypeD" Include="../../typed/TypeD/TypeD.csproj"/>
-		<ProjectReference Name="TypeOCore" Include="../../typeocore/TypeOCore/TypeOCore.csproj"/>
-		<ProjectReference Name="TypeDCore" Include="../../typeocore/TypeDCore/TypeDCore.csproj"/>
-		<ProjectReference Name="TypeOTK" Include="../../typeotk/TypeOTK/TypeOTK.csproj"/>
-		<ProjectReference Name="TypeDTK" Include="../../typeotk/TypeDTK/TypeDTK.csproj"/>
-		<ProjectReference Name="TypeOBasic2d" Include="../../typeobasic2d/TypeOBasic2d/TypeOBasic2d.csproj"/>
-		<ProjectReference Name="TypeDBasic2d" Include="../../typeobasic2d/TypeDBasic2d/TypeDBasic2d.csproj"/>
-		<ProjectReference Name="TypeODesktop" Include="../../typeodesktop/TypeODesktop/TypeODesktop.csproj"/>
+		<ProjectReference Name="TypeD" Include="../../typed/TypeD/TypeD.csproj" />
+		<ProjectReference Name="TypeOCore" Include="../../typeocore/TypeOCore/TypeOCore.csproj" />
+		<ProjectReference Name="TypeDCore" Include="../../typeocore/TypeDCore/TypeDCore.csproj" />
+		<ProjectReference Name="TypeOTK" Include="../../typeotk/TypeOTK/TypeOTK.csproj" />
+		<ProjectReference Name="TypeDTK" Include="../../typeotk/TypeDTK/TypeDTK.csproj" />
+		<ProjectReference Name="TypeOBasic2d" Include="../../typeobasic2d/TypeOBasic2d/TypeOBasic2d.csproj" />
+		<ProjectReference Name="TypeDBasic2d" Include="../../typeobasic2d/TypeDBasic2d/TypeDBasic2d.csproj" />
+		<ProjectReference Name="TypeODesktop" Include="../../typeodesktop/TypeODesktop/TypeODesktop.csproj" />
 	</ItemGroup>
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/typer.bat dependency -p $(ProjectDir)../&quot;"/>
+		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/typer.bat dependency -p $(ProjectDir)../&quot;" />
 	</Target>
 </Project>

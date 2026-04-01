@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+using System.IO;
 using TypeD.Commands;
 using TypeD.Models.Data;
 using TypeD.ViewModel;
@@ -26,9 +28,10 @@ namespace TypeDitor.Commands
             currentMainWindow.Close();
         }
 
-        protected void ShowError(string error)
+        protected async void ShowError(string error)
         {
-            //MessageBox.Show(error);
+            var box = MessageBoxManager.GetMessageBoxStandard("Error", error, ButtonEnum.Ok, Icon.Error);
+            await box.ShowAsPopupAsync(ViewModelBase.MainWindow);
         }
     }
 }
