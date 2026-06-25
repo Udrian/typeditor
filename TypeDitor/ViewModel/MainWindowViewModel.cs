@@ -173,7 +173,7 @@ namespace TypeDitor.ViewModel
             if (SaveModel.AnythingToSave)
             {
                 var box = MessageBoxManager.GetMessageBoxStandard("Closing...", "Save before closing?", ButtonEnum.YesNoCancel, Icon.Question);
-                var result = await box.ShowAsPopupAsync(MainWindow);
+                var result = await box.ShowWindowDialogAsync(MainWindow);
 
                 if (result == ButtonResult.Yes)
                 {
