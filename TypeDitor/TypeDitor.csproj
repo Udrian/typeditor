@@ -6,22 +6,22 @@
 		<Company>Typedeaf</Company>
 		<Product>TypeO</Product>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
-    	<!--<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>-->
+    	<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
 	</PropertyGroup>
 	<ItemGroup>
     	<AvaloniaResource Include="Icons\**" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="11.3.13" />
-		<PackageReference Include="Avalonia.Desktop" Version="11.3.13" />
-		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13" />
-		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.13" />
-		<PackageReference Include="Dock.Avalonia" Version="11.3.11.22" />
-        <PackageReference Include="Dock.Model.Avalonia" Version="11.3.11.22" />
-        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.11.22" />
-        <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.11.22" />
+		<PackageReference Include="Avalonia" Version="11.3.18" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.3.18" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.18" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.18" />
+		<PackageReference Include="Dock.Avalonia" Version="11.3.12.1" />
+        <PackageReference Include="Dock.Model.Avalonia" Version="11.3.12.1" />
+        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.12.1" />
+        <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.12.1" />
 		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-		<PackageReference Include="Avalonia.Diagnostics" Version="11.3.13">
+		<PackageReference Include="Avalonia.Diagnostics" Version="11.3.18">
 			<IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
 			<PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
 		</PackageReference>
