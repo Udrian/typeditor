@@ -41,6 +41,10 @@
                             <TextBlock Text="{Binding LineDisplay}" Foreground="#C9D1D9"/>
                             <TextBlock Text="{Binding ColumnDisplay}" Foreground="#C9D1D9"/>
                         </StackPanel>
+                        <Button Content="Open location in external editor"
+                                IsEnabled="{Binding CanOpen}"
+                                Click="OpenBuildIssueInExternalEditor_Click"
+                                HorizontalAlignment="Left" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
             </Expander>

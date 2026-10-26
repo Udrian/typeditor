@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
+using System;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using System.Collections.Generic;
@@ -30,6 +31,7 @@ namespace TypeDitor.ViewModel
         public string LineDisplay { get; }
         public string ColumnDisplay { get; }
         public string Message { get; }
+        public bool CanOpen => !string.IsNullOrWhiteSpace(File);
 
         public BuildIssueDisplay(BuildIssue issue)
         {
@@ -115,6 +117,51 @@ namespace TypeDitor.ViewModel
         public int ErrorCount => BuildErrors.Count;
         public IReadOnlyList<BuildIssueDisplay> WarningIssueItems => WarningIssues;
         public IReadOnlyList<BuildIssueDisplay> ErrorIssueItems => ErrorIssues;
+
+        public async Task OpenBuildIssueInExternalEditor(BuildIssueDisplay issue)
+        {
+            if (issue == null || !issue.CanOpen)
+                return;
+
+            var filePath = Path.IsPathRooted(issue.File)
+                ? issue.File
+                : Path.GetFullPath(issue.File, LoadedProject.Location);
+            var editorCommand = SettingModel.GetContext<MainWindowSettingContext>().ExternalEditor.Value;
+            var quotedPath = QuotePowerShellArgument(filePath);
+            var location = issue.Line == "Not provided"
+                ? filePath
+                : $"{filePath}:{issue.Line}{(issue.Column == "Not provided" ? string.Empty : $":{issue.Column}")}";
+            var quotedLocation = QuotePowerShellArgument(location);
+
+            var commandSupportsLocation = editorCommand.Contains("{location}", StringComparison.Ordinal);
+            var commandExecutable = editorCommand.TrimStart().Split(' ', '\t')[0];
+            var isVisualStudioCode = Path.GetFileNameWithoutExtension(commandExecutable)
+                .StartsWith("code", StringComparison.OrdinalIgnoreCase);
+
+            if (commandSupportsLocation)
+            {
+                editorCommand = editorCommand.Replace("{location}", quotedLocation, StringComparison.Ordinal);
+            }
+            else if (isVisualStudioCode && issue.Line != "Not provided")
+            {
+                editorCommand = editorCommand.Replace("{path}", $"--goto {quotedLocation}", StringComparison.Ordinal);
+            }
+            else
+            {
+                editorCommand = editorCommand.Replace("{path}", quotedPath, StringComparison.Ordinal);
+            }
+
+            editorCommand = editorCommand
+                .Replace("{line}", issue.Line, StringComparison.Ordinal)
+                .Replace("{column}", issue.Column, StringComparison.Ordinal);
+
+            await CMD.Run(editorCommand);
+        }
+
+        private static string QuotePowerShellArgument(string value)
+        {
+            return $"'{value.Replace("'", "''")}'";
+        }
 
         // Properties
         public int SizeX

@@ -1,5 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using System;
+using System.Threading.Tasks;
 using TypeD.Models.Data;
 using TypeDitor.ViewModel;
 
@@ -65,6 +67,26 @@ namespace TypeDitor.View
         {
             WarningIssuesPopup.IsOpen = false;
             ErrorIssuesPopup.IsOpen = !ErrorIssuesPopup.IsOpen;
+        }
+
+        private async void OpenBuildIssueInExternalEditor_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Control { DataContext: BuildIssueDisplay issue })
+                return;
+
+            try
+            {
+                await ViewModel.OpenBuildIssueInExternalEditor(issue);
+            }
+            catch (Exception exception)
+            {
+                var box = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                    "External editor error",
+                    $"Could not open the issue location:{Environment.NewLine}{exception.Message}",
+                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                await box.ShowWindowDialogAsync(this);
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 using Avalonia.Platform.Storage;
 using TypeD.Helpers;
 using TypeD.Models.Data;
+using TypeD.Models.Interfaces;
 using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
 using TypeDitor.View.Dialogs.Project;
@@ -13,11 +14,13 @@ namespace TypeDitor.Commands
         // Providers
         private IRecentProvider RecentProvider { get; set; }
         private IProjectProvider ProjectProvider { get; set; }
+        private IProjectModel ProjectModel { get; set; }
 
         public OpenProjectCommand() : base()
         {
             RecentProvider = ResourceModel.Get<IRecentProvider>();
             ProjectProvider = ResourceModel.Get<IProjectProvider>();
+            ProjectModel = ResourceModel.Get<IProjectModel>();
         }
 
         public async override void Execute(object param)
@@ -62,6 +65,7 @@ namespace TypeDitor.Commands
                         RecentProvider.Add(loadedProject.ProjectFilePath, loadedProject.ProjectName);
 
                         OpenMainWindow(loadedProject);
+                        await ProjectModel.Build(loadedProject);
                     }
                 }
                 catch (Exception e)
