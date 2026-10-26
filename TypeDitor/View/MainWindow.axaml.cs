@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using System;
 using System.Threading.Tasks;
@@ -28,11 +29,25 @@ namespace TypeDitor.View
             DataContext = ViewModel;
 
             ViewModel.InitUI(this);
+            AddHandler(KeyDownEvent, MainWindow_KeyDown, RoutingStrategies.Tunnel);
             WarningIssuesPopup.DataContext = ViewModel;
             ErrorIssuesPopup.DataContext = ViewModel;
         }
 
         public Menu TopMenu { get { return _TopMenu; } }
+
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            var shortcut = TypeD.Models.Data.EditorShortcut.FromKey(
+                e.Key.ToString(),
+                e.KeyModifiers.HasFlag(KeyModifiers.Control),
+                e.KeyModifiers.HasFlag(KeyModifiers.Shift),
+                e.KeyModifiers.HasFlag(KeyModifiers.Alt),
+                e.KeyModifiers.HasFlag(KeyModifiers.Meta));
+
+            if (ViewModel.TryExecuteShortcut(shortcut, "global"))
+                e.Handled = true;
+        }
 
         private void ModulesMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -55,6 +70,11 @@ namespace TypeDitor.View
         private void OptionsMenuItem_Click(object sender, RoutedEventArgs e)
         {
             ViewModel.OpenOptionsWindow();
+        }
+
+        private void CommandPaletteMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ExecuteCommand("command-palette.open");
         }
 
         private void WarningBadge_Click(object sender, RoutedEventArgs e)

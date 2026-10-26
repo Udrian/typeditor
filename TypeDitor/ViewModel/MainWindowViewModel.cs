@@ -59,6 +59,7 @@ namespace TypeDitor.ViewModel
         ISaveModel SaveModel { get; set; }
         ISettingModel SettingModel { get; set; }
         IPanelModel PanelModel { get; set; }
+        IEditorCommandRegistry EditorCommandRegistry { get; set; }
 
         // Commands
         public BuildProjectCommand BuildProjectCommand { get; set; }
@@ -70,7 +71,6 @@ namespace TypeDitor.ViewModel
         public SaveProjectCommand SaveProjectCommand { get; set; }
         public OpenPanelCommand OpenPanelCommand { get; set; }
         public ClosePanelCommand ClosePanelCommand { get; set; }
-
         // Data
         public Project LoadedProject { get; private set; }
         private List<TypeD.View.Panel> DelayedPanels { get; set; } = new List<TypeD.View.Panel>();
@@ -81,6 +81,7 @@ namespace TypeDitor.ViewModel
         private bool _isBuilding;
         private bool _isBuildFailed;
         private string _buildStatus = "Build status unavailable";
+        private List<IDisposable> CommandRegistrations { get; set; } = new();
 
         public bool IsBuilding
         {
@@ -222,6 +223,7 @@ namespace TypeDitor.ViewModel
             SaveModel = ResourceModel.Get<ISaveModel>();
             SettingModel = ResourceModel.Get<ISettingModel>();
             PanelModel = ResourceModel.Get<IPanelModel>();
+            EditorCommandRegistry = ResourceModel.Get<IEditorCommandRegistry>();
             
             BuildProjectCommand = new BuildProjectCommand();
             ExitProjectCommand = new ExitProjectCommand();
@@ -230,6 +232,77 @@ namespace TypeDitor.ViewModel
             OpenProjectCommand = new OpenProjectCommand();
             RunProjectCommand = new RunProjectCommand();
             SaveProjectCommand = new SaveProjectCommand();
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "project.save",
+                "Save project",
+                "Save pending project changes.",
+                "global",
+                "Ctrl+S",
+                _ => SaveProjectCommand.Execute(LoadedProject),
+                _ => SaveProjectCommand.CanExecute(LoadedProject)));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "project.build",
+                "Build project",
+                "Save pending changes and build the loaded project.",
+                "global",
+                string.Empty,
+                _ => BuildProjectCommand.Execute(LoadedProject)));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "project.run",
+                "Run project",
+                "Run the most recently built project.",
+                "global",
+                string.Empty,
+                _ => RunProjectCommand.Execute(LoadedProject)));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "project.new",
+                "Create project",
+                "Create a new project.",
+                "global",
+                string.Empty,
+                _ => NewProjectCommand.Execute(null)));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "project.import",
+                "Import project",
+                "Import an existing solution as a project.",
+                "global",
+                string.Empty,
+                _ => ImportProjectCommand.Execute(null)));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "project.open",
+                "Open project",
+                "Open an existing project.",
+                "global",
+                string.Empty,
+                _ => OpenProjectCommand.Execute(null)));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "project.exit",
+                "Exit project",
+                "Close the current project.",
+                "global",
+                string.Empty,
+                _ => ExitProjectCommand.Execute(null)));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "tools.modules",
+                "Open modules",
+                "Browse and manage project modules.",
+                "global",
+                string.Empty,
+                _ => OpenModulesWindow()));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "tools.options",
+                "Open options",
+                "Open editor and project options.",
+                "global",
+                string.Empty,
+                _ => OpenOptionsWindow()));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "command-palette.open",
+                "Open command palette",
+                "Search and execute an available command.",
+                "global",
+                "Ctrl+P",
+                _ => OpenCommandPalette()));
             OpenPanelCommand = new OpenPanelCommand();
             ClosePanelCommand = new ClosePanelCommand();
             HookModel.AddHook<BuildStatusChangedHook>(OnBuildStatusChanged);
@@ -265,6 +338,20 @@ namespace TypeDitor.ViewModel
             var items = new List<TypeD.View.MenuItem>();
             foreach (var panel in PanelModel.GetPanels())
             {
+                CommandRegistrations.Add(EditorCommandRegistry.Register(
+                    $"panel.toggle.{panel.ID}",
+                    $"Toggle {panel.Title} panel",
+                    $"Open or close the {panel.Title} panel.",
+                    "global",
+                    string.Empty,
+                    _ =>
+                    {
+                        if (!panel.Open)
+                            OpenPanelCommand.Execute(panel.ID);
+                        else
+                            ClosePanelCommand.Execute(panel.ID);
+                    }));
+
                 items.Add(new TypeD.View.MenuItem()
                 {
                     Name = panel.Title,
@@ -292,6 +379,17 @@ namespace TypeDitor.ViewModel
             dialog.Show();
         }
 
+        public void OpenCommandPalette()
+        {
+            var palette = new CommandPaletteWindow(EditorCommandRegistry);
+            palette.Show(MainWindow);
+        }
+
+        public void ExecuteCommand(string commandId)
+        {
+            EditorCommandRegistry.Execute(commandId);
+        }
+
         public async Task<bool> OnClose()
         {
             LoadedProject.IsClosing = true;
@@ -314,7 +412,15 @@ namespace TypeDitor.ViewModel
             TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
             HookModel.Shoot(new ExitHook() { Project = LoadedProject });
             HookModel.RemoveHook<BuildStatusChangedHook>(OnBuildStatusChanged);
+            foreach (var registration in CommandRegistrations)
+                registration.Dispose();
+            CommandRegistrations.Clear();
             return false;
+        }
+
+        public bool TryExecuteShortcut(string shortcut, string scope)
+        {
+            return EditorCommandRegistry.TryExecuteShortcut(shortcut, scope);
         }
 
         private void OnBuildStatusChanged(BuildStatusChangedHook hook)

@@ -1,0 +1,28 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TypeDitor.View.CommandPaletteWindow"
+        Title="Command Palette"
+        Width="640" Height="480"
+        MinWidth="480" MinHeight="320"
+        WindowStartupLocation="CenterOwner"
+        KeyDown="Window_KeyDown">
+    <Grid RowDefinitions="Auto,*" Margin="12" RowSpacing="10">
+        <TextBox Name="SearchBox" Watermark="Search commands..." TextChanged="SearchBox_TextChanged"/>
+        <ListBox Name="CommandList" Grid.Row="1" ItemsSource="{Binding FilteredCommands}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Button Click="Command_Click" HorizontalContentAlignment="Stretch"
+                            Background="Transparent" BorderThickness="0" Padding="8,6">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ShortcutDisplay}"
+                                       Foreground="#87909C" Margin="12,0,0,0"/>
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Description}"
+                                       Foreground="#87909C" FontSize="12" TextWrapping="Wrap"/>
+                        </Grid>
+                    </Button>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>
