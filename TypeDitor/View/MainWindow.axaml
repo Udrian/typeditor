@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:typedock="clr-namespace:TypeDitor.View.TypeDock"
+        xmlns:primitives="using:Avalonia.Controls.Primitives"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:local="clr-namespace:TypeDitor.View" 
         x:Class="TypeDitor.View.MainWindow"
@@ -10,6 +11,41 @@
         Width="{Binding Path=SizeX, Mode=TwoWay}" Height="{Binding Path=SizeY, Mode=TwoWay}"
         WindowState="{Binding Path=Maximized, Mode=TwoWay}"
         Closing="Window_Closing">
+    <Window.Resources>
+        <DataTemplate x:Key="BuildIssueItemTemplate">
+            <Expander Margin="0,3" IsExpanded="False">
+                <Expander.Header>
+                    <Border Background="#343943" CornerRadius="3" Padding="8,6">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+                            <TextBlock Text="{Binding Severity}" FontWeight="Bold" Foreground="White"
+                                       Margin="0,0,8,2"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Code}" Foreground="#C9D1D9"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Summary}"
+                                       Foreground="#F2F2F2" TextWrapping="Wrap" MaxWidth="680"
+                                       MaxHeight="40"/>
+                            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding LocationSummary}"
+                                       Foreground="#B9C0CA" FontSize="12" Margin="0,4,0,0"/>
+                        </Grid>
+                    </Border>
+                </Expander.Header>
+                <Border Background="#1D2026" BorderBrush="#505762" BorderThickness="1"
+                        CornerRadius="3" Padding="10" Margin="0,2,0,4">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Full details" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="{Binding Message}" Foreground="#F2F2F2"
+                                   TextWrapping="Wrap" MaxWidth="680"/>
+                        <TextBlock Text="{Binding File}" Foreground="#C9D1D9"
+                                   TextWrapping="Wrap" MaxWidth="680"/>
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <TextBlock Text="{Binding LineDisplay}" Foreground="#C9D1D9"/>
+                            <TextBlock Text="{Binding ColumnDisplay}" Foreground="#C9D1D9"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Expander>
+        </DataTemplate>
+    </Window.Resources>
     <DockPanel Name="DockPanelRoot">
         <Menu DockPanel.Dock="Top" Name="_TopMenu">
             <MenuItem Header="_File">
@@ -45,14 +81,51 @@
                 </StackPanel>
             </Button>
         </StackPanel>
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
-            <StackPanel.Styles>
-                <Style Selector="">
-                    <Setter Property="Background" Value="{DynamicResource TextControlSelectionHighlightColor}"/>
-                </Style>
-            </StackPanel.Styles>
-            <Label Content="{Binding LoadedProject.Location}"/>
-        </StackPanel>
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
+            <TextBlock VerticalAlignment="Center" Margin="5,2" Text="{Binding LoadedProject.Location}"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6" Margin="8,2">
+                <TextBlock Text="{Binding BuildStatus}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <ProgressBar Grid.Column="2" Width="130" Height="10" Margin="8,2"
+                         IsVisible="{Binding IsBuilding}" IsIndeterminate="{Binding IsBuilding}"/>
+            <Button Name="WarningBadge" Grid.Column="3" Padding="8,2"
+                    Click="WarningBadge_Click" IsEnabled="{Binding HasWarnings}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="⚠" Foreground="DarkGoldenrod" FontSize="16"/>
+                    <TextBlock Text="{Binding WarningCount}"/>
+                </StackPanel>
+            </Button>
+            <Button Name="ErrorBadge" Grid.Column="4" Padding="8,3" Margin="4,0"
+                    Background="#A82020" BorderBrush="#FF7777" BorderThickness="1"
+                    IsVisible="{Binding IsBuildFailed}" Click="ErrorBadge_Click">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="✖" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                    <TextBlock Text="BUILD FAILED" Foreground="White" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding ErrorCount}" Foreground="White" FontWeight="Bold"/>
+                    <TextBlock Text="errors" Foreground="White"/>
+                </StackPanel>
+            </Button>
+            <primitives:Popup Name="WarningIssuesPopup" PlacementTarget="{Binding #WarningBadge}"
+                              Placement="Top" IsLightDismissEnabled="True">
+                <Border Background="#242830" BorderBrush="#D4A72C" BorderThickness="1"
+                        CornerRadius="4" Padding="12" MaxWidth="800" MaxHeight="600">
+                    <ScrollViewer MaxHeight="560">
+                        <ItemsControl ItemsSource="{Binding WarningIssueItems}"
+                                      ItemTemplate="{StaticResource BuildIssueItemTemplate}"/>
+                    </ScrollViewer>
+                </Border>
+            </primitives:Popup>
+            <primitives:Popup Name="ErrorIssuesPopup" PlacementTarget="{Binding #ErrorBadge}"
+                              Placement="Top" IsLightDismissEnabled="True">
+                <Border Background="#242830" BorderBrush="#E05252" BorderThickness="1"
+                        CornerRadius="4" Padding="12" MaxWidth="800" MaxHeight="600">
+                    <ScrollViewer MaxHeight="560">
+                        <ItemsControl ItemsSource="{Binding ErrorIssueItems}"
+                                      ItemTemplate="{StaticResource BuildIssueItemTemplate}"/>
+                    </ScrollViewer>
+                </Border>
+            </primitives:Popup>
+        </Grid>
         <typedock:TypeDockRoot x:Name="DockRoot" Margin="5"/>
     </DockPanel>
 </Window>

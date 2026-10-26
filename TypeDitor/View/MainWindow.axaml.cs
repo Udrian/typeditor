@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using TypeD.Models.Data;
 using TypeDitor.ViewModel;
@@ -26,6 +26,8 @@ namespace TypeDitor.View
             DataContext = ViewModel;
 
             ViewModel.InitUI(this);
+            WarningIssuesPopup.DataContext = ViewModel;
+            ErrorIssuesPopup.DataContext = ViewModel;
         }
 
         public Menu TopMenu { get { return _TopMenu; } }
@@ -51,6 +53,18 @@ namespace TypeDitor.View
         private void OptionsMenuItem_Click(object sender, RoutedEventArgs e)
         {
             ViewModel.OpenOptionsWindow();
+        }
+
+        private void WarningBadge_Click(object sender, RoutedEventArgs e)
+        {
+            ErrorIssuesPopup.IsOpen = false;
+            WarningIssuesPopup.IsOpen = !WarningIssuesPopup.IsOpen;
+        }
+
+        private void ErrorBadge_Click(object sender, RoutedEventArgs e)
+        {
+            WarningIssuesPopup.IsOpen = false;
+            ErrorIssuesPopup.IsOpen = !ErrorIssuesPopup.IsOpen;
         }
     }
 }

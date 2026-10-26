@@ -1,7 +1,9 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Threading;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using TypeD;
 using TypeD.Helpers;
@@ -16,6 +18,38 @@ using TypeDitor.View.Dialogs.Tools;
 
 namespace TypeDitor.ViewModel
 {
+    internal sealed class BuildIssueDisplay
+    {
+        public string Severity { get; }
+        public string Code { get; }
+        public string Summary { get; }
+        public string LocationSummary { get; }
+        public string File { get; }
+        public string Line { get; }
+        public string Column { get; }
+        public string LineDisplay { get; }
+        public string ColumnDisplay { get; }
+        public string Message { get; }
+
+        public BuildIssueDisplay(BuildIssue issue)
+        {
+            Severity = issue.Severity?.ToUpperInvariant() ?? "ISSUE";
+            Code = issue.Code;
+            Message = issue.Message;
+            Summary = string.IsNullOrWhiteSpace(Message)
+                ? "No message provided"
+                : Message.Length > 140 ? Message.Substring(0, 137) + "..." : Message;
+            File = issue.File;
+            Line = issue.Line?.ToString() ?? "Not provided";
+            Column = issue.Column?.ToString() ?? "Not provided";
+            LineDisplay = $"Line: {Line}";
+            ColumnDisplay = $"Column: {Column}";
+            LocationSummary = string.IsNullOrWhiteSpace(File)
+                ? "Location unavailable"
+                : $"{Path.GetFileName(File)}{(issue.Line.HasValue ? $":{issue.Line}" : string.Empty)}";
+        }
+    }
+
     internal class MainWindowViewModel : ViewModelBase
     {
         // Models
@@ -38,6 +72,49 @@ namespace TypeDitor.ViewModel
         // Data
         public Project LoadedProject { get; private set; }
         private List<TypeD.View.Panel> DelayedPanels { get; set; } = new List<TypeD.View.Panel>();
+        private List<BuildIssue> BuildWarnings { get; set; } = new();
+        private List<BuildIssue> BuildErrors { get; set; } = new();
+        private List<BuildIssueDisplay> WarningIssues { get; set; } = new();
+        private List<BuildIssueDisplay> ErrorIssues { get; set; } = new();
+        private bool _isBuilding;
+        private bool _isBuildFailed;
+        private string _buildStatus = "Build status unavailable";
+
+        public bool IsBuilding
+        {
+            get => _isBuilding;
+            private set
+            {
+                _isBuilding = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string BuildStatus
+        {
+            get => _buildStatus;
+            private set
+            {
+                _buildStatus = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsBuildFailed
+        {
+            get => _isBuildFailed;
+            private set
+            {
+                _isBuildFailed = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int WarningCount => BuildWarnings.Count;
+        public bool HasWarnings => WarningCount > 0;
+        public int ErrorCount => BuildErrors.Count;
+        public IReadOnlyList<BuildIssueDisplay> WarningIssueItems => WarningIssues;
+        public IReadOnlyList<BuildIssueDisplay> ErrorIssueItems => ErrorIssues;
 
         // Properties
         public int SizeX
@@ -108,6 +185,7 @@ namespace TypeDitor.ViewModel
             SaveProjectCommand = new SaveProjectCommand();
             OpenPanelCommand = new OpenPanelCommand();
             ClosePanelCommand = new ClosePanelCommand();
+            HookModel.AddHook<BuildStatusChangedHook>(OnBuildStatusChanged);
         }
 
         // Functions
@@ -188,7 +266,35 @@ namespace TypeDitor.ViewModel
 
             TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
             HookModel.Shoot(new ExitHook() { Project = LoadedProject });
+            HookModel.RemoveHook<BuildStatusChangedHook>(OnBuildStatusChanged);
             return false;
+        }
+
+        private void OnBuildStatusChanged(BuildStatusChangedHook hook)
+        {
+            if (hook.Project != LoadedProject)
+                return;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsBuilding = hook.IsBuilding;
+                BuildStatus = hook.Status;
+                if (hook.IsBuilding)
+                    IsBuildFailed = false;
+                if (hook.IsComplete)
+                {
+                    IsBuildFailed = !hook.Succeeded;
+                    BuildWarnings = hook.Warnings;
+                    BuildErrors = hook.Errors;
+                    WarningIssues = BuildWarnings.ConvertAll(issue => new BuildIssueDisplay(issue));
+                    ErrorIssues = BuildErrors.ConvertAll(issue => new BuildIssueDisplay(issue));
+                    OnPropertyChanged(nameof(WarningCount));
+                    OnPropertyChanged(nameof(HasWarnings));
+                    OnPropertyChanged(nameof(ErrorCount));
+                    OnPropertyChanged(nameof(WarningIssueItems));
+                    OnPropertyChanged(nameof(ErrorIssueItems));
+                }
+            });
         }
 
         public override void OnAddElement(object element)
