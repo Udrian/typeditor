@@ -2,7 +2,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:typedock="clr-namespace:TypeDitor.View.TypeDock"
         xmlns:primitives="using:Avalonia.Controls.Primitives"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:local="clr-namespace:TypeDitor.View" 
@@ -131,6 +130,6 @@
                 </Border>
             </primitives:Popup>
         </Grid>
-        <typedock:TypeDockRoot x:Name="DockRoot" Margin="5"/>
+        <DockControl x:Name="DockControl" Factory="{Binding DockFactory}" Layout="{Binding Layout}" Margin="5"/>
     </DockPanel>
 </Window>

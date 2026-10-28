@@ -1,6 +1,10 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
+using Dock.Model.Avalonia.Json;
+using Dock.Model.Controls;
+using Dock.Model.Core;
 using System;
+using System.Diagnostics;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using System.Collections.Generic;
@@ -16,6 +20,7 @@ using TypeD.ViewModel;
 using TypeDitor.Commands;
 using TypeDitor.View;
 using TypeDitor.View.Dialogs.Tools;
+using TypeDitor.View.TypeDock;
 
 namespace TypeDitor.ViewModel
 {
@@ -73,7 +78,18 @@ namespace TypeDitor.ViewModel
         public ClosePanelCommand ClosePanelCommand { get; set; }
         // Data
         public Project LoadedProject { get; private set; }
-        private List<TypeD.View.Panel> DelayedPanels { get; set; } = new List<TypeD.View.Panel>();
+        public TypeDockFactory DockFactory { get; }
+        private IRootDock _layout;
+        public IRootDock Layout
+        {
+            get => _layout;
+            private set
+            {
+                _layout = value;
+                OnPropertyChanged();
+            }
+        }
+        //private List<TypeD.View.Panel> DelayedPanels { get; set; } = new List<TypeD.View.Panel>();
         private List<BuildIssue> BuildWarnings { get; set; } = new();
         private List<BuildIssue> BuildErrors { get; set; } = new();
         private List<BuildIssueDisplay> WarningIssues { get; set; } = new();
@@ -224,6 +240,14 @@ namespace TypeDitor.ViewModel
             SettingModel = ResourceModel.Get<ISettingModel>();
             PanelModel = ResourceModel.Get<IPanelModel>();
             EditorCommandRegistry = ResourceModel.Get<IEditorCommandRegistry>();
+            DockFactory = new TypeDockFactory(ResourceModel);
+            DockFactory.DockableClosed += (_, args) =>
+            {
+                var panel = PanelModel.GetPanels().Find(p => p.ID == args.Dockable?.Id);
+                if (panel?.Open == true)
+                    PanelModel.ClosePanel(panel.ID);
+                SaveDockLayout();
+            };
             
             BuildProjectCommand = new BuildProjectCommand();
             ExitProjectCommand = new ExitProjectCommand();
@@ -311,6 +335,39 @@ namespace TypeDitor.ViewModel
         // Functions
         public void InitUI(MainWindow mainWindow)
         {
+            var dockLayoutSetting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            var savedDockLayout = dockLayoutSetting.DockLayout.Value;
+            IRootDock layout;
+            if (string.IsNullOrWhiteSpace(savedDockLayout))
+            {
+                layout = DockFactory.CreateLayout();
+            }
+            else
+            {
+                try
+                {
+                    layout = new AvaloniaDockSerializer().Deserialize<IRootDock>(savedDockLayout);
+                    if (layout == null)
+                        throw new System.Text.Json.JsonException("The saved Dock layout was empty.");
+                }
+                catch (System.Text.Json.JsonException exception)
+                {
+                    Trace.TraceError($"Could not restore the saved Dock layout: {exception}");
+                    layout = DockFactory.CreateLayout();
+                }
+            }
+
+            DockFactory.InitializeLayout(layout);
+            Layout = layout;
+            DockFactory.DockableAdded += (_, _) => SaveDockLayout();
+            DockFactory.DockableRemoved += (_, _) => SaveDockLayout();
+            DockFactory.DockableMoved += (_, _) => SaveDockLayout();
+            DockFactory.DockableDocked += (_, _) => SaveDockLayout();
+            DockFactory.DockableUndocked += (_, _) => SaveDockLayout();
+            DockFactory.DockableSwapped += (_, _) => SaveDockLayout();
+            DockFactory.DockablePinned += (_, _) => SaveDockLayout();
+            DockFactory.DockableUnpinned += (_, _) => SaveDockLayout();
+
             var initUIHook = HookModel.Shoot(new InitUIHook(LoadedProject));
 
             var menu = initUIHook.Menu;
@@ -325,12 +382,6 @@ namespace TypeDitor.ViewModel
             {
                 ViewHelper.InitMenu(mainWindow.TopMenu, menuItem, this);
             }
-            
-            foreach(var p in DelayedPanels)
-            {
-                OnAddElement(p);
-            }
-            DelayedPanels.Clear();
         }
 
         private List<TypeD.View.MenuItem> RebuildMainMenuViewItems()
@@ -409,13 +460,24 @@ namespace TypeDitor.ViewModel
                 }
             }
 
-            TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
+            SaveDockLayout();
             HookModel.Shoot(new ExitHook() { Project = LoadedProject });
+            TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
             HookModel.RemoveHook<BuildStatusChangedHook>(OnBuildStatusChanged);
             foreach (var registration in CommandRegistrations)
                 registration.Dispose();
             CommandRegistrations.Clear();
             return false;
+        }
+
+        private void SaveDockLayout()
+        {
+            if (Layout == null)
+                return;
+
+            var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            setting.DockLayout.Value = new AvaloniaDockSerializer().Serialize(Layout);
+            SettingModel.SetContext(setting);
         }
 
         public bool TryExecuteShortcut(string shortcut, string scope)
@@ -448,51 +510,6 @@ namespace TypeDitor.ViewModel
                     OnPropertyChanged(nameof(ErrorIssueItems));
                 }
             });
-        }
-
-        public override void OnAddElement(object element)
-        {
-            if(element is TypeD.View.Panel)
-            {
-                var panel = element as TypeD.View.Panel;
-                if (MainWindow == null)
-                {
-                    DelayedPanels.Add(panel);
-                    return;
-                }
-            
-                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
-                var panelSetting = setting.Panels.Value.Find(p => p.ID == panel.ID);
-                if (panelSetting == null)
-                    return;
-
-                MainWindow.DockRoot.AddPanel(panel, panelSetting);
-            }
-        }
-
-        public override void OnRemoveElement(object element)
-        {
-            //TODO: Find a way to remove panels through Avalonia Dock
-            //if (element is TypeD.View.Panel)
-            //{
-            //    //TODO: This is not the most efficent way to do this...
-            //    MainWindow.DockPanelRoot.Children.Remove(MainWindow.DockRoot);
-            //    MainWindow.DockRoot = new View.TypeDock.TypeDockRoot();
-            //    MainWindow.DockRoot.Margin = new Thickness(5);
-            //    MainWindow.DockPanelRoot.Children.Add(MainWindow.DockRoot);
-            //
-            //    foreach (var panel in PanelModel.GetPanels())
-            //    {
-            //        var parent = VisualTreeHelper.GetParent(panel.PanelView);
-            //        if(parent!= null)
-            //            (parent as Avalonia.Controls.Panel).Children.Remove(panel.PanelView);
-            //    }
-            //    foreach (var panel in PanelModel.GetPanels())
-            //    {
-            //        if (panel.Open)
-            //            OnAddElement(panel);
-            //    }
-            //}
         }
     }
 }
