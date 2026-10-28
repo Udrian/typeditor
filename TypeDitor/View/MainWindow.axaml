@@ -77,14 +77,7 @@
                 <MenuItem Header="_Options" Click="OptionsMenuItem_Click"/>
             </MenuItem>
         </Menu>
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" DockPanel.Dock="Top">
-            <Button Command="{Binding RunProjectCommand}" CommandParameter="{Binding LoadedProject}">
-                <StackPanel Orientation="Horizontal">
-                    <Image Source="/Icons/Run.png" Width="8" Height="8"/>
-                    <TextBlock Margin="5,0,0,0">Run</TextBlock>
-                </StackPanel>
-            </Button>
-        </StackPanel>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" DockPanel.Dock="Top" Name="Toolbar"/>
         <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
             <TextBlock VerticalAlignment="Center" Margin="5,2" Text="{Binding LoadedProject.Location}"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6" Margin="8,2">

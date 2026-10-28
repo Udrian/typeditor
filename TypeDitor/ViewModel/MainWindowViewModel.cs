@@ -400,6 +400,27 @@ namespace TypeDitor.ViewModel
             {
                 ViewHelper.InitMenu(mainWindow.TopMenu, menuItem, this);
             }
+
+            var toolbar = initUIHook.Toolbar;
+            toolbar.Add("Project", new TypeD.View.ToolbarItem()
+            {
+                Name = "Run",
+                ToolTip = "Run project",
+                IconPath = "avares://TypeDitor/Icons/Run.png",
+                ClickParameter = nameof(LoadedProject),
+                Click = param => RunProjectCommand.Execute(param)
+            });
+
+            var toolbarSetting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            var groupOrder = toolbarSetting.ToolbarGroupOrder.Value?.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            ViewHelper.InitToolbar(mainWindow.ToolbarPanel, toolbar, this, groupOrder, SaveToolbarGroupOrder);
+        }
+
+        private void SaveToolbarGroupOrder(IReadOnlyList<string> groupOrder)
+        {
+            var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            setting.ToolbarGroupOrder.Value = string.Join(';', groupOrder);
+            SettingModel.SetContext(setting);
         }
 
         private List<TypeD.View.MenuItem> RebuildMainMenuViewItems()

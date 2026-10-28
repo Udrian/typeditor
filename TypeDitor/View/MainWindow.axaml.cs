@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using System;
-using System.Threading.Tasks;
 using TypeD.Models.Data;
 using TypeDitor.ViewModel;
 
@@ -35,6 +34,7 @@ namespace TypeDitor.View
         }
 
         public Menu TopMenu { get { return _TopMenu; } }
+        public StackPanel ToolbarPanel { get { return Toolbar; } }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
