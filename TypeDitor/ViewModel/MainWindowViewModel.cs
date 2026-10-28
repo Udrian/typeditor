@@ -65,6 +65,7 @@ namespace TypeDitor.ViewModel
         ISettingModel SettingModel { get; set; }
         IPanelModel PanelModel { get; set; }
         IEditorCommandRegistry EditorCommandRegistry { get; set; }
+        ICommandHistoryModel CommandHistoryModel { get; set; }
 
         // Commands
         public BuildProjectCommand BuildProjectCommand { get; set; }
@@ -240,6 +241,7 @@ namespace TypeDitor.ViewModel
             SettingModel = ResourceModel.Get<ISettingModel>();
             PanelModel = ResourceModel.Get<IPanelModel>();
             EditorCommandRegistry = ResourceModel.Get<IEditorCommandRegistry>();
+            CommandHistoryModel = ResourceModel.Get<ICommandHistoryModel>();
             DockFactory = new TypeDockFactory(ResourceModel);
             DockFactory.DockableClosed += (_, args) =>
             {
@@ -264,6 +266,22 @@ namespace TypeDitor.ViewModel
                 "Ctrl+S",
                 _ => SaveProjectCommand.Execute(LoadedProject),
                 _ => SaveProjectCommand.CanExecute(LoadedProject)));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "edit.undo",
+                "Undo",
+                "Undo the latest reversible command.",
+                "global",
+                "Ctrl+Z",
+                _ => CommandHistoryModel.Undo(),
+                _ => CommandHistoryModel.CanUndo));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "edit.redo",
+                "Redo",
+                "Redo the next command in history.",
+                "global",
+                "Ctrl+Shift+Z",
+                _ => CommandHistoryModel.Redo(),
+                _ => CommandHistoryModel.CanRedo));
             CommandRegistrations.Add(EditorCommandRegistry.Register(
                 "project.build",
                 "Build project",
