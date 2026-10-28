@@ -287,7 +287,7 @@ namespace TypeDitor.ViewModel
                 "Build project",
                 "Save pending changes and build the loaded project.",
                 "global",
-                string.Empty,
+                "Ctrl+Shift+B",
                 _ => BuildProjectCommand.Execute(LoadedProject)));
             CommandRegistrations.Add(EditorCommandRegistry.Register(
                 "project.run",
