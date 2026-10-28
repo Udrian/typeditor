@@ -38,6 +38,11 @@ namespace TypeDitor.View
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
+            // Let focused text boxes keep the standard text editing shortcuts (select all, copy, paste, ...).
+            if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox
+                && e.KeyModifiers == KeyModifiers.Control
+                && e.Key is Key.A or Key.C or Key.V or Key.X or Key.Z or Key.Y)
+                return;
             var shortcut = TypeD.Models.Data.EditorShortcut.FromKey(
                 e.Key.ToString(),
                 e.KeyModifiers.HasFlag(KeyModifiers.Control),
