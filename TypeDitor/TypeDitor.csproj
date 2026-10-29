@@ -10,6 +10,7 @@
 	</PropertyGroup>
 	<ItemGroup>
     	<AvaloniaResource Include="Icons\**" />
+		<Content Include="DefaultIcons\**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Avalonia" Version="12.1.4" />
