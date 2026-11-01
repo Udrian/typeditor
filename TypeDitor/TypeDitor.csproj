@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Authors>Simon Haggren</Authors>
 		<Company>Typedeaf</Company>
 		<Product>TypeO</Product>
@@ -14,14 +14,14 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Avalonia" Version="12.1.4" />
-		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.1.3" />
+		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.1.4" />
 		<PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
-		<PackageReference Include="Dock.Avalonia" Version="12.1.0.12" />
-        <PackageReference Include="Dock.Model.Avalonia" Version="12.1.0.12" />
-        <PackageReference Include="Dock.Model.Mvvm" Version="12.1.0.12" />
-        <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="12.1.0.12" />
+		<PackageReference Include="Dock.Avalonia" Version="12.1.0.13" />
+        <PackageReference Include="Dock.Model.Avalonia" Version="12.1.0.13" />
+        <PackageReference Include="Dock.Model.Mvvm" Version="12.1.0.13" />
+        <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="12.1.0.13" />
 		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
 		<PackageReference Include="Avalonia.Diagnostics" Version="11.3.22">
 			<IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
