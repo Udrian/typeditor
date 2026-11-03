@@ -48,7 +48,7 @@
                                                     <TextBox Grid.Column="1" Grid.RowSpan="2"
                                                              Name="ValueBox" Text="{Binding Value, Mode=TwoWay}"
                                                              IsReadOnly="{Binding IsShortcut}"
-                                                             Watermark="Press a key combination"
+                                                             PlaceholderText="Press a key combination"
                                                              MinWidth="220" VerticalAlignment="Center"
                                                              KeyDown="ValueBox_KeyDown"/>
                                                     <Button Grid.Column="2" Grid.RowSpan="2"

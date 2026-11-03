@@ -228,7 +228,7 @@ namespace TypeDitor.ViewModel
         }
 
         // View
-        public MainWindow MainWindow { get; set; }
+        public new MainWindow MainWindow { get; set; }
 
         // Constructors
         public MainWindowViewModel(MainWindow mainWindow, Project loadedProject) : base(mainWindow)
