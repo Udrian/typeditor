@@ -160,7 +160,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
 
             if (!createdModule.IsLocal)
             {
-                foreach (var dependency in createdModule.Product.Dependencies)
+                foreach (var dependency in createdModule.TypeO.Dependencies)
                 {
                     var nameVersion = dependency.Split("-");
                     nameVersion[1] = nameVersion[1].Split(";")[0];
