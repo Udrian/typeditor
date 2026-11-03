@@ -1,5 +1,5 @@
-﻿using System;
-using System.IO;
+using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -23,50 +23,70 @@ namespace TypeDitor.View.Dialogs.Tools
             InitializeComponent();
         }
 
-        private void InstallButton_Click(object sender, RoutedEventArgs e)
+        private async Task PickFolder(string title, Func<string, Task> action)
         {
-            ModulesDialogViewModel.InstallSelectedModule();
-        }
-
-        private void UninstallButton_Click(object sender, RoutedEventArgs e)
-        {
-            ModulesDialogViewModel.UninstallSelectedModule();
-        }
-
-        private async void AddLocal_Click(object sender, RoutedEventArgs e)
-        {
-
-            var files = await ViewModelBase.MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            var folders = await ViewModelBase.MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = "Open Folder",
+                Title = title,
                 AllowMultiple = false
-            
             });
-            
-            if (files.Count >= 1)
+
+            if (folders.Count >= 1)
             {
-                bool found = false;
-                var name = "";
-                var folder = files[0].Path.AbsolutePath;
-                foreach (var file in Directory.GetFiles(folder))
-                {
-                    if (file.EndsWith(".sln"))
-                    {
-                        found = true;
-                        name = Path.GetFileNameWithoutExtension(file);
-                        break;
-                    }
-                }
-            
-                if (!found)
-                    //TODO: Display Error Popup
-                    return;
-                ModulesDialogViewModel.AddLocal(name, folder);
+                await Reselect(action(folders[0].Path.LocalPath));
             }
         }
 
-        private async void Window_Initialized(object sender, EventArgs e)
+        // The list is rebuilt after every change, so restore the selection afterwards
+        private async Task Reselect(Task task)
         {
+            await task;
+            ModuleList.SelectedItem = ModulesDialogViewModel.SelectedModule;
+        }
+
+        private async void InstallButton_Click(object sender, RoutedEventArgs e)
+        {
+            await Reselect(ModulesDialogViewModel.InstallSelectedModule());
+        }
+
+        private async void UpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            await Reselect(ModulesDialogViewModel.UpdateSelectedModule());
+        }
+
+        private async void UninstallButton_Click(object sender, RoutedEventArgs e)
+        {
+            await Reselect(ModulesDialogViewModel.UninstallSelectedModule());
+        }
+
+        private async void UseLocal_Click(object sender, RoutedEventArgs e)
+        {
+            if (ModulesDialogViewModel.SelectedModule == null) return;
+            await PickFolder("Select the local module folder", ModulesDialogViewModel.UseLocal);
+        }
+
+        private async void UseReleased_Click(object sender, RoutedEventArgs e)
+        {
+            await Reselect(ModulesDialogViewModel.UseReleased());
+        }
+
+        private async void UpdateLocalDependencies_Click(object sender, RoutedEventArgs e)
+        {
+            await Reselect(ModulesDialogViewModel.UpdateLocalDependencies());
+        }
+
+        private async void NewModule_Click(object sender, RoutedEventArgs e)
+        {
+            var name = NewModuleName.Text?.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+
+            await PickFolder("Select the folder to create the module in", path => ModulesDialogViewModel.CreateModule(name, path));
+            NewModuleName.Text = "";
+        }
+
+        protected override async void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
             await ModulesDialogViewModel.ListModules();
         }
 

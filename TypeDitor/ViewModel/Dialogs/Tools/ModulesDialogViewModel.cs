@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,174 +15,154 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         public class Module : ViewModelBase
         {
             public string Name { get; set; }
+            public string Author { get; set; }
             public bool Enabled { get; set; }
+            public bool IsDirect { get; set; }
+            public bool IsLocal { get; set; }
+            public string LocalPath { get; set; }
+            public string InstalledVersion { get; set; }
             public string Version { get; set; }
             public List<string> Versions { get; set; } = new List<string>();
-            private int progress;
-            public int Progress { 
-                get => progress;
-                set
-                {
-                    progress = value;
-                    OnPropertyChanged();
-                }
-            }
-            private bool progressVisible;
-            public bool ProgressVisible {
-                get => progressVisible;
-                set
-                {
-                    progressVisible = value;
-                    OnPropertyChanged();
-                }
-            }
-            public long BytesDownloaded { get; set; }
-            public long TotalBytesDownload { get; set; }
-            public string DownloadText { get { return $"{BytesDownloaded}/{TotalBytesDownload} ({Progress}%)"; } }
+            public string DisplayVersion { get { return IsLocal ? $"local: {LocalPath}" : InstalledVersion; } }
         }
 
-        // Modules
+        // Models
         IModuleModel ModuleModel { get; set; }
-        IProjectModel ProjectModel { get; set; }
+        ITyperModel TyperModel { get; set; }
 
         // Providers
         IModuleProvider ModuleProvider { get; set; }
 
         // Data
         TypeD.Models.Data.Project LoadedProject { get; set; }
-        private IEnumerable<ModuleList> ModuleList { get; set; }
-        private List<Module> AllModules { get; set; }
         public ObservableCollection<Module> Modules { get; set; }
 
         // Properties
         public Module SelectedModule { get; set; }
         public bool SelectedModuleVisibility { get { return SelectedModule == null ? false : true; } }
+        private bool busy;
+        public bool Busy
+        {
+            get => busy;
+            set
+            {
+                busy = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Idle));
+            }
+        }
+        public bool Idle { get { return !Busy; } }
 
         // Constructors
         public ModulesDialogViewModel(Control element, TypeD.Models.Data.Project loadedProject) : base(element)
         {
-            AllModules = new List<Module>();
             Modules = new ObservableCollection<Module>();
             LoadedProject = loadedProject;
 
             ModuleModel = ResourceModel.Get<IModuleModel>();
-            ProjectModel = ResourceModel.Get<IProjectModel>();
+            TyperModel = ResourceModel.Get<ITyperModel>();
             ModuleProvider = ResourceModel.Get<IModuleProvider>();
         }
 
         // Functions
         public async Task ListModules()
         {
-            ModuleList = await ModuleProvider.List(LoadedProject);
-            AllModules.Clear();
-            Modules.Clear();
-            foreach (var m1 in ModuleList)
+            Busy = true;
+            try
             {
-                var enabled = false;
-                var enabledVersion = "";
-                foreach(var m2 in LoadedProject.Modules)
+                var selectedName = SelectedModule?.Name;
+                var moduleList = (await ModuleProvider.List(LoadedProject))
+                    .Select(m => (m.Name, m.Author, Versions: m.Versions.Select(v => v.Version).ToList())).ToList();
+                var dependencies = (await TyperModel.ListDependencies(LoadedProject.Location)).Where(d => !d.Nuget && d.Tags.Count == 0 && d.Name != "TypeD").ToList();
+
+                // The project's own dependencies are always listed, even if typer could not list the available modules
+                foreach (var dependency in dependencies.Where(d => !moduleList.Exists(m => m.Name == d.Name)))
                 {
-                    if(m1.Name == m2.Name)
+                    moduleList.Add((dependency.Name, dependency.Author, new List<string>() { dependency.Version }));
+                }
+
+                Modules.Clear();
+                foreach (var entry in moduleList)
+                {
+                    var used = LoadedProject.Modules.Find(m => m.Name == entry.Name);
+                    var dependency = dependencies.Find(d => d.Name == entry.Name);
+                    var versions = entry.Versions;
+                    Modules.Add(new Module()
                     {
-                        enabled = true;
-                        enabledVersion = m2.Version;
-                    }
+                        Name = entry.Name,
+                        Author = entry.Author ?? dependency?.Author,
+                        Enabled = used != null || dependency != null,
+                        IsDirect = dependency != null,
+                        IsLocal = dependency?.IsLocal ?? used?.IsLocal ?? false,
+                        LocalPath = dependency?.LocalPath,
+                        InstalledVersion = dependency?.Version ?? used?.Version ?? "",
+                        Version = dependency?.Version ?? versions.FirstOrDefault() ?? "",
+                        Versions = versions
+                    });
                 }
-                var module = new Module()
-                {
-                    Name = m1.Name,
-                    Enabled = enabled,
-                    Version = enabledVersion,
-                    Versions = m1.Versions.Select(v => v.Version).ToList(),
-                    Progress = 0,
-                    ProgressVisible = false
-                };
-                AllModules.Add(module);
-                Modules.Add(module);
+                SelectedModule = Modules.FirstOrDefault(m => m.Name == selectedName);
+                OnPropertyChanged(nameof(SelectedModule));
+                OnPropertyChanged(nameof(SelectedModuleVisibility));
             }
-        }
-
-        public void InstallSelectedModule()
-        {
-            if (SelectedModule == null || string.IsNullOrEmpty(SelectedModule.Version)) return;
-            InstallModule(SelectedModule.Name, SelectedModule.Version, new List<string>());
-        }
-
-        private async void InstallModule(string name, string version, List<string> alreadyInstalled)
-        {
-            if (alreadyInstalled.Contains(name) || name == "TypeD") return;
-            alreadyInstalled.Add(name);
-
-            var module = AllModules.FirstOrDefault(m => m.Name == name);
-            if(module == null)
+            catch (System.Exception e)
             {
-                module = new Module()
-                {
-                    Name = name,
-                    Enabled = false,
-                    Version = "",
-                    Versions = new List<string>() { version },
-                    Progress = 0,
-                    ProgressVisible = false
-                };
-                AllModules.Add(module);
-                Modules.Add(module);
+                ResourceModel.Get<ILogModel>()?.Log($"Could not list modules: {e}");
             }
-            if (string.IsNullOrEmpty(version))
-                version = module.Versions.FirstOrDefault();
-            module.Version = version;
-
-            module.ProgressVisible = true;
-            var createdModule = ModuleProvider.Create(module.Name, module.Version);
-            ProjectModel.AddModule(LoadedProject, createdModule);
-            
-            if (!createdModule.IsLocal)
+            finally
             {
-                await ModuleModel.Download(createdModule, (bytes, mProgress, totalBytes) =>
-                {
-                    module.Progress = mProgress;
-                    module.BytesDownloaded = bytes;
-                    module.TotalBytesDownload = totalBytes;
-                    //module.OnPropertyChanged(nameof(module.DownloadText));
-                });
-
-                module.Progress = 0;
-                module.BytesDownloaded = 0;
-                module.TotalBytesDownload = 0;
-                module.ProgressVisible = false;
-                //module.OnPropertyChanged(nameof(module.DownloadText));
-            }
-
-            ModuleModel.LoadAssembly(LoadedProject, createdModule);
-            module.Enabled = true;
-            //module.OnPropertyChanged(nameof(module.Enabled));
-            //module.OnPropertyChanged(nameof(module.Version));
-
-            if (!createdModule.IsLocal)
-            {
-                foreach (var dependency in createdModule.TypeO.Dependencies)
-                {
-                    var nameVersion = dependency.Split("-");
-                    nameVersion[1] = nameVersion[1].Split(";")[0];
-                    nameVersion[1] = ModuleList.FirstOrDefault(m => m.Name == nameVersion[0])?.Versions?.FirstOrDefault(v => v.Version.StartsWith(nameVersion[1]))?.Version;
-                    InstallModule(nameVersion[0], nameVersion[1], alreadyInstalled);
-                }
+                Busy = false;
             }
         }
 
-        public void UninstallSelectedModule()
+        public Task InstallSelectedModule()
         {
-            if (SelectedModule == null || !SelectedModule.Enabled) return;
-            ProjectModel.RemoveModule(LoadedProject, SelectedModule.Name);
-            SelectedModule.Enabled = false;
-            //SelectedModule.OnPropertyChanged(nameof(SelectedModule.Enabled));
-            SelectedModule.Version = "";
-            //SelectedModule.OnPropertyChanged(nameof(SelectedModule.Version));
+            var module = SelectedModule;
+            if (module == null || string.IsNullOrEmpty(module.Version)) return Task.CompletedTask;
+            return Run(() => ModuleModel.Add(LoadedProject, module.Author, module.Name, module.Version));
         }
 
-        public void AddLocal(string name, string path)
+        public Task UpdateSelectedModule()
         {
-            InstallModule(name, $"{path};local", new List<string>());
+            var module = SelectedModule;
+            if (module == null || !module.IsDirect || module.IsLocal) return Task.CompletedTask;
+            return Run(() => ModuleModel.Update(LoadedProject, module.Name));
+        }
+
+        public Task UninstallSelectedModule()
+        {
+            var module = SelectedModule;
+            if (module == null || !module.IsDirect) return Task.CompletedTask;
+            return Run(() => ModuleModel.Remove(LoadedProject, module.Name));
+        }
+
+        public Task UseLocal(string path)
+        {
+            var module = SelectedModule;
+            if (module == null) return Task.CompletedTask;
+            return Run(async () =>
+            {
+                if (!module.IsDirect && !await ModuleModel.Add(LoadedProject, module.Author, module.Name, module.Version)) return false;
+                return await ModuleModel.UseLocal(LoadedProject, module.Name, path);
+            });
+        }
+
+        public Task UseReleased()
+        {
+            var module = SelectedModule;
+            if (module == null || !module.IsLocal) return Task.CompletedTask;
+            return Run(() => ModuleModel.UseReleased(LoadedProject, module.Name));
+        }
+
+        public Task UpdateLocalDependencies()
+        {
+            var module = SelectedModule;
+            if (module == null || !module.IsLocal) return Task.CompletedTask;
+            return Run(() => ModuleModel.UpdateLocal(LoadedProject, module.Name));
+        }
+
+        public Task CreateModule(string name, string outputPath)
+        {
+            return Run(() => ModuleModel.CreateLocal(LoadedProject, name, outputPath));
         }
 
         public void SelectedChanged(Module module)
@@ -190,6 +170,20 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             SelectedModule = module;
             OnPropertyChanged(nameof(SelectedModule));
             OnPropertyChanged(nameof(SelectedModuleVisibility));
+        }
+
+        private async Task Run(System.Func<Task<bool>> action)
+        {
+            Busy = true;
+            try
+            {
+                await action();
+            }
+            finally
+            {
+                Busy = false;
+            }
+            await ListModules();
         }
     }
 }
