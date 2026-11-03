@@ -3,7 +3,19 @@
   "version": "0.1.0",
   "externals": [],
   "dependencies": [
-    "TypeD-0.1.0"
+    "TypeD-0.1.0",
+    "Avalonia-12.1.4;nuget",
+    "Avalonia.Controls.ColorPicker-12.1.4;nuget",
+    "Avalonia.Desktop-12.1.4;nuget",
+    "Avalonia.Themes.Fluent-12.1.4;nuget",
+    "Avalonia.Fonts.Inter-12.1.4;nuget",
+    "Dock.Avalonia-12.1.0.13;nuget",
+    "Dock.Model.Avalonia-12.1.0.13;nuget",
+    "Dock.Model.Mvvm-12.1.0.13;nuget",
+    "Dock.Avalonia.Themes.Fluent-12.1.0.13;nuget",
+    "Avalonia.Diagnostics-11.3.22;nuget",
+    "CommunityToolkit.Mvvm-8.4.2;nuget",
+    "MessageBox.Avalonia-12.1.0;nuget"
   ],
   "type": "exe",
   "project": [
