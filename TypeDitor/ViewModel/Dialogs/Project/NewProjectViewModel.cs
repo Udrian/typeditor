@@ -1,13 +1,32 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
+using TypeD.Models.Interfaces;
+using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
 
 namespace TypeDitor.ViewModel.Dialogs.Project
 {
     internal class NewProjectViewModel : ViewModelBase
     {
+        public class Module : ViewModelBase
+        {
+            public string Name { get; set; }
+            public string Author { get; set; }
+            public bool Enabled { get; set; }
+            public string InstalledVersion { get; set; }
+            public string Version { get; set; }
+            public string DisplayVersion { get { return InstalledVersion; } }
+        }
+
+        // Models
+        private IModuleModel ModuleModel { get; set; }
+        private ITyperModel TyperModel { get; set; }
+        private IModuleProvider ModuleProvider { get; set; }
+
         // Properties
         private string projectName;
         public string ProjectName
@@ -33,10 +52,28 @@ namespace TypeDitor.ViewModel.Dialogs.Project
         public string ProjectCSSolutionName { get; set; }
         public string ProjectCSProjectName { get; set; }
 
+        public ObservableCollection<Module> AvailableModules { get; set; }
+
+        private bool modulesLoading;
+        public bool ModulesLoading
+        {
+            get => modulesLoading;
+            set
+            {
+                modulesLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
         // Constructors
         public NewProjectViewModel() : base()
         {
             ProjectLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TypeD");
+            AvailableModules = new ObservableCollection<Module>();
+
+            ModuleModel = ResourceModel.Get<IModuleModel>();
+            TyperModel = ResourceModel.Get<ITyperModel>();
+            ModuleProvider = ResourceModel.Get<IModuleProvider>();
         }
 
         // Functions
@@ -57,6 +94,38 @@ namespace TypeDitor.ViewModel.Dialogs.Project
             }
         }
 
+        public async Task LoadAvailableModules()
+        {
+            ModulesLoading = true;
+            try
+            {
+                // Create a temporary project-like object to query available modules
+                var moduleList = (await ModuleProvider.List(null))
+                    .Select(m => (m.Name, m.Author, Versions: m.Versions.Select(v => v.Version).ToList())).ToList();
+
+                AvailableModules.Clear();
+                foreach (var entry in moduleList)
+                {
+                    AvailableModules.Add(new Module()
+                    {
+                        Name = entry.Name,
+                        Author = entry.Author,
+                        Enabled = false, // All unchecked by default (only required modules will be added later)
+                        InstalledVersion = entry.Versions.FirstOrDefault() ?? "",
+                        Version = entry.Versions.FirstOrDefault() ?? ""
+                    });
+                }
+            }
+            catch
+            {
+                // If module listing fails, continue without module selection
+            }
+            finally
+            {
+                ModulesLoading = false;
+            }
+        }
+
         public bool Validate()
         {
             bool isValid = !string.IsNullOrEmpty(ProjectName) &&
@@ -70,6 +139,11 @@ namespace TypeDitor.ViewModel.Dialogs.Project
             }
 
             return true;
+        }
+
+        public ObservableCollection<Module> GetSelectedModules()
+        {
+            return new ObservableCollection<Module>(AvailableModules.Where(m => m.Enabled));
         }
     }
 }

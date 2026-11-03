@@ -1,4 +1,6 @@
-﻿using System.IO;
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
 using Avalonia.Platform.Storage;
 using TypeD.Helpers;
 using TypeD.Models.Data;
@@ -56,25 +58,29 @@ namespace TypeDitor.Commands
                 {
                     var name = Path.GetFileNameWithoutExtension(newProjectDialog.ViewModel.ProjectName);
                     var location = this.IsDirectory(newProjectDialog.ViewModel.ProjectLocation) ? newProjectDialog.ViewModel.ProjectLocation : Path.GetDirectoryName(newProjectDialog.ViewModel.ProjectLocation);
-                    var solution = @$".\{newProjectDialog.ViewModel.ProjectCSSolutionName}.sln";
+                    var solution = $"{newProjectDialog.ViewModel.ProjectCSSolutionName}.sln";
                     var project = Path.GetFileNameWithoutExtension(newProjectDialog.ViewModel.ProjectCSProjectName);
 
                     //New project
                     var progressDialog = new ProjectCreationProgressDialog();
-                    var newProjectTask = ProjectProvider.Create(name,
+                    await progressDialog.ShowAndWaitForFirstFrameAsync();
+                    
+                    var newProject = await ProjectProvider.Create(name,
                                                                   location,
                                                                   solution,
                                                                   project,
+                                                                  null, // No modules for import
                                                                   (progress) =>
                                                                   {
-                                                                      progressDialog.Progress = progress;
                                                                       if (progress >= 100)
                                                                       {
                                                                           progressDialog.Close();
                                                                       }
+                                                                  },
+                                                                  (update) =>
+                                                                  {
+                                                                      progressDialog.Report(update);
                                                                   });
-                    await progressDialog.ShowDialog(ViewModelBase.MainWindow);
-                    var newProject = newProjectTask.Result;
                     RecentProvider.Add(newProject.ProjectFilePath, newProject.ProjectName);
                     this.OpenMainWindow(newProject);
                 }

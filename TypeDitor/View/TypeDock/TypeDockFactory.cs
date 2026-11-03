@@ -73,6 +73,15 @@ namespace TypeDitor.View.TypeDock
             var panels = PanelModel.GetPanels();
             _layout = layout;
             _tools.Clear();
+            
+            // Validate that the layout has the required dock structure
+            if (!IsLayoutValid(layout))
+            {
+                // If layout is invalid, create a fresh one
+                layout = CreateLayout();
+                _layout = layout;
+            }
+            
             InitLayout(layout);
 
             foreach (var staleTool in EnumerateDockables(layout)
@@ -97,6 +106,16 @@ namespace TypeDitor.View.TypeDock
                     AddPanel(panel);
                 }
             }
+        }
+
+        private bool IsLayoutValid(IRootDock layout)
+        {
+            if (layout == null)
+                return false;
+
+            // Check if the layout contains at least one tool dock
+            var hasToolDock = FindDockable(layout, dockable => dockable is IToolDock) is IToolDock;
+            return hasToolDock;
         }
 
         public override IRootDock CreateLayout()
@@ -243,7 +262,9 @@ namespace TypeDitor.View.TypeDock
             if (FindDockable(_layout, dockable => dockable is IToolDock) is IToolDock firstToolDock)
                 return firstToolDock;
 
-            throw new InvalidOperationException("The Dock layout does not contain a tool dock for panels.");
+            // If no tool dock found, the layout is broken. Recreate it.
+            throw new InvalidOperationException($"The Dock layout does not contain a tool dock for panels. " +
+                $"The layout structure may be corrupted. Please reset your dock layout preferences.");
         }
 
         private IToolDock FindToolDock(Alignment alignment)

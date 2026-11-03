@@ -2,27 +2,31 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="400"
+        mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="420"
+        Width="560" SizeToContent="Height"
+        WindowStartupLocation="CenterScreen"
+        WindowDecorations="None" CanResize="False" ShowInTaskbar="True"
         xmlns:local="clr-namespace:TypeDitor.View.Dialogs.Project"
         x:Class="TypeDitor.View.Dialogs.Project.ProjectCreationProgressDialog"
-        Title="Creating project..."
-        Closed="Window_Closed">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="50"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="50"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="25" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="25" />
-            <RowDefinition Height="50" />
-        </Grid.RowDefinitions>
-        <ProgressBar Grid.Column="1" Grid.Row="2" Value="{Binding Progress}"/>
-        <DockPanel Grid.Column="1" Grid.Row="1">
-            <Label DockPanel.Dock="Top" FontSize="16">Creating project...</Label>
-            <TextBox Name="tbOutputText" TextChanged="tbOutputText_TextChanged" IsReadOnly="True" Text="{Binding OutputText}"/>
-        </DockPanel>
-    </Grid>
+        Title="Creating project...">
+    <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
+        <StackPanel>
+            <Image Source="{Binding Splash}" Width="558" Height="300" Stretch="UniformToFill"
+                   RenderOptions.BitmapInterpolationMode="HighQuality" ClipToBounds="True"/>
+            <StackPanel Margin="20,14,20,18" Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold" Text="{Binding Message}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8" Text="{Binding ProgressText}"/>
+                </Grid>
+                <ProgressBar Minimum="0" Maximum="100" Height="6" MinHeight="6" Value="{Binding Progress}"/>
+                <Panel MinHeight="30">
+                    <StackPanel IsVisible="{Binding HasSubTask}" Spacing="4" Margin="0,4,0,0">
+                        <TextBlock FontSize="12" Opacity="0.75" Text="{Binding SubTask}" TextTrimming="CharacterEllipsis"/>
+                        <ProgressBar Minimum="0" Maximum="100" Height="3" MinHeight="3" Value="{Binding SubProgress}" IsIndeterminate="{Binding SubIndeterminate}"/>
+                    </StackPanel>
+                </Panel>
+                <TextBlock FontSize="11" Opacity="0.55" Text="{Binding ProjectName}" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
 </Window>

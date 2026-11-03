@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
+using System;
 using TypeDitor.ViewModel.Dialogs.Project;
 
 namespace TypeDitor.View.Dialogs.Project
@@ -30,6 +31,12 @@ namespace TypeDitor.View.Dialogs.Project
                 return;
 
             Close(true);
+        }
+
+        protected override async void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            await ViewModel.LoadAvailableModules();
         }
     }
 }
