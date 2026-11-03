@@ -9,6 +9,7 @@ using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
 using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
+using TypeDitor.Models;
 using TypeDitor.View.Dialogs.Project;
 
 namespace TypeDitor.Commands
@@ -61,8 +62,10 @@ namespace TypeDitor.Commands
                 try
                 {
                     LogModel.AttachLogOutput(LogName, line => logLines.Enqueue($"[{DateTime.Now:HH:mm:ss}] {line}"));
+                    // Switch to the theme of the project before showing its progress
+                    ThemeManager.ApplyProject(Path.GetDirectoryName(path));
                     progressDialog = new OpenProjectProgressDialog();
-                    progressDialog.Show();
+                    await progressDialog.ShowAndWaitForFirstFrameAsync();
                     var loadedProject = await ProjectProvider.Load(path, (progress) => {
                         if (progress >= 100)
                         {
@@ -85,6 +88,7 @@ namespace TypeDitor.Commands
                 catch (Exception e)
                 {
                     progressDialog?.Close();
+                    ThemeManager.ApplyGlobal();
                     var details = new StringBuilder();
                     details.AppendLine($"Project: {path}");
                     details.AppendLine($"Failed during: {currentStep}");

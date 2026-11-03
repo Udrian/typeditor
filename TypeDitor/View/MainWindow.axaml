@@ -75,6 +75,7 @@
                 <MenuItem Header="_Modules" Click="ModulesMenuItem_Click"/>
                 <MenuItem Header="_Command Palette" Click="CommandPaletteMenuItem_Click"/>
                 <MenuItem Header="_Options" Click="OptionsMenuItem_Click"/>
+                <MenuItem Header="_Theme" Click="ThemeMenuItem_Click"/>
             </MenuItem>
         </Menu>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" DockPanel.Dock="Top" Name="Toolbar"/>

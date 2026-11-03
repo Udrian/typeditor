@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using TypeD.Models.Data;
@@ -81,6 +83,25 @@ namespace TypeDitor.View.Dialogs.Project
                 _subIndeterminate = value;
                 NotifyPropertyChanged(nameof(SubIndeterminate));
             }
+        }
+
+        /// <summary>
+        /// Shows the dialog and completes once its first frame has been presented,
+        /// so blocking work started afterwards doesn't leave an unpainted window.
+        /// </summary>
+        public async Task ShowAndWaitForFirstFrameAsync()
+        {
+            var rendered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            void OnOpened(object sender, EventArgs e)
+            {
+                Opened -= OnOpened;
+                // The first callback runs before the first frame is composed, the second after it has been presented
+                RequestAnimationFrame(_ => RequestAnimationFrame(_ => rendered.TrySetResult()));
+            }
+            Opened += OnOpened;
+            Show();
+            // Never block loading if the platform doesn't deliver frame callbacks
+            await Task.WhenAny(rendered.Task, Task.Delay(TimeSpan.FromSeconds(1)));
         }
 
         public void Report(ProgressUpdate update)

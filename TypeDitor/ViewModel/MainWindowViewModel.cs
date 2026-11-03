@@ -339,6 +339,13 @@ namespace TypeDitor.ViewModel
                 string.Empty,
                 _ => OpenOptionsWindow()));
             CommandRegistrations.Add(EditorCommandRegistry.Register(
+                "tools.theme",
+                "Open theme settings",
+                "Choose light or dark mode and the color scheme for the editor or the project.",
+                "global",
+                string.Empty,
+                _ => OpenThemeWindow()));
+            CommandRegistrations.Add(EditorCommandRegistry.Register(
                 "command-palette.open",
                 "Open command palette",
                 "Search and execute an available command.",
@@ -461,6 +468,12 @@ namespace TypeDitor.ViewModel
         {
             var dialog = new ModulesDialog(LoadedProject);
             dialog.Show();
+        }
+
+        public void OpenThemeWindow()
+        {
+            var dialog = new ThemeDialog(LoadedProject?.Location);
+            dialog.Show(MainWindow);
         }
 
         public void OpenOptionsWindow()

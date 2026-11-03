@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TypeDitor.View.Dialogs.Tools.ThemeDialog"
+        Title="Theme" Width="600" Height="760" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="20">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+            <Button Content="OK" IsDefault="True" Click="OnOk"/>
+            <Button Content="Cancel" IsCancel="True" Click="OnCancel"/>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12" Margin="0,0,12,0">
+                <StackPanel x:Name="ScopePanel" Spacing="6">
+                    <TextBlock Text="Apply to" FontWeight="SemiBold"/>
+                    <ComboBox x:Name="ScopeBox" HorizontalAlignment="Stretch" SelectionChanged="OnScopeChanged">
+                        <ComboBoxItem Content="Editor default (applied on startup)"/>
+                        <ComboBoxItem Content="This project only"/>
+                    </ComboBox>
+                    <CheckBox x:Name="OverrideCheck" Content="Use a different theme for this project" IsVisible="False" IsCheckedChanged="OnOverrideChanged"/>
+                    <TextBlock x:Name="ScopeHint" Opacity="0.7" TextWrapping="Wrap" FontSize="12"/>
+                </StackPanel>
+
+                <StackPanel x:Name="ChoicePanel" Spacing="12">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Mode" FontWeight="SemiBold"/>
+                        <ComboBox x:Name="ModeBox" HorizontalAlignment="Stretch" SelectionChanged="OnModeChanged">
+                            <ComboBoxItem Content="System"/>
+                            <ComboBoxItem Content="Light"/>
+                            <ComboBoxItem Content="Dark"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Color scheme" FontWeight="SemiBold"/>
+                        <ComboBox x:Name="SchemeBox" HorizontalAlignment="Stretch" SelectionChanged="OnSchemeChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <Border Width="16" Height="16" CornerRadius="3" Background="{Binding AccentBrush}"/>
+                                        <Border Width="16" Height="16" CornerRadius="3" Background="{Binding LightBrush}" BorderBrush="Gray" BorderThickness="1"/>
+                                        <Border Width="16" Height="16" CornerRadius="3" Background="{Binding DarkBrush}" BorderBrush="Gray" BorderThickness="1"/>
+                                        <TextBlock Text="{Binding Label}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+
+                <Expander Header="Customize and create themes" x:Name="CustomExpander">
+                    <StackPanel Spacing="8" Margin="0,8,0,0">
+                        <TextBlock Opacity="0.7" TextWrapping="Wrap" FontSize="12"
+                                   Text="The colors below start from the selected scheme. Change what you want and save it under a name to make your own theme. Themes are json files in your themes folder, and a project can carry its own in TypeO/Themes."/>
+                        <TextBox x:Name="CustomName" Watermark="Theme name"/>
+                        <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+                            <TextBlock Grid.Row="0" Text="Corner radius" VerticalAlignment="Center"/>
+                            <NumericUpDown x:Name="RadiusBox" Grid.Row="0" Grid.Column="2" Minimum="0" Maximum="30" Increment="1" FormatString="0" Width="140"/>
+                            <TextBlock Grid.Row="1" Text="Font (empty for the default)" VerticalAlignment="Center"/>
+                            <TextBox x:Name="FontBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Width="220" Watermark="e.g. Consolas"/>
+                        </Grid>
+                        <TabControl x:Name="EditorTabs">
+                            <TabItem Header="Light mode">
+                                <StackPanel x:Name="LightColors" Spacing="6" Margin="0,8,0,0"/>
+                            </TabItem>
+                            <TabItem Header="Dark mode">
+                                <StackPanel x:Name="DarkColors" Spacing="6" Margin="0,8,0,0"/>
+                            </TabItem>
+                        </TabControl>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Save and use" Click="OnSaveCustom"/>
+                            <Button x:Name="DeleteButton" Content="Delete selected" Click="OnDeleteCustom"/>
+                            <Button Content="Open themes folder" Click="OnOpenFolder"/>
+                        </StackPanel>
+                        <TextBlock x:Name="CustomError" Foreground="#D32F2F" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

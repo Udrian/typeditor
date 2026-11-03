@@ -77,6 +77,11 @@ namespace TypeDitor.View
             ViewModel.OpenOptionsWindow();
         }
 
+        private void ThemeMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.OpenThemeWindow();
+        }
+
         private void CommandPaletteMenuItem_Click(object sender, RoutedEventArgs e)
         {
             ViewModel.ExecuteCommand("command-palette.open");

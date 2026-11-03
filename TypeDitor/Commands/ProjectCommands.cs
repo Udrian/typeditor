@@ -4,6 +4,7 @@ using System.IO;
 using TypeD.Commands;
 using TypeD.Models.Data;
 using TypeD.ViewModel;
+using TypeDitor.Models;
 using TypeDitor.View;
 using TypeDitor.View.Dialogs.Project;
 
@@ -22,6 +23,7 @@ namespace TypeDitor.Commands
 
         protected void OpenMainWindow(Project loadedProject)
         {
+            ThemeManager.ApplyProject(loadedProject.Location);
             var currentMainWindow = ViewModelBase.MainWindow;
             var mainWindow = new MainWindow(loadedProject);
             ViewModelBase.MainWindow = mainWindow;
