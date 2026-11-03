@@ -2,7 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="150"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="260" Width="500" Height="260"
+        WindowStartupLocation="CenterScreen"
         xmlns:local="clr-namespace:TypeDitor.View.Dialogs.Project"
         x:Class="TypeDitor.View.Dialogs.Project.OpenProjectProgressDialog"
         Title="Opening project...">
@@ -13,13 +14,22 @@
             <ColumnDefinition Width="50"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="25" />
-            <RowDefinition Height="50" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="25" />
-            <RowDefinition Height="25" />
         </Grid.RowDefinitions>
-        <ProgressBar Grid.Column="1" Grid.Row="3" Value="{Binding Progress}"/>
-        <Label Grid.Column="1" Grid.Row="1" FontSize="16">Opening project...</Label>
+        <TextBlock Grid.Column="1" Grid.Row="1" FontSize="16" Text="{Binding Message}" TextTrimming="CharacterEllipsis"/>
+        <Grid Grid.Column="1" Grid.Row="2" Margin="0,8,0,0" ColumnDefinitions="*,Auto">
+            <ProgressBar Grid.Column="0" Minimum="0" Maximum="100" Height="16" Value="{Binding Progress}"/>
+            <TextBlock Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding ProgressText}"/>
+        </Grid>
+        <StackPanel Grid.Column="1" Grid.Row="4" IsVisible="{Binding HasSubTask}">
+            <TextBlock FontSize="12" Opacity="0.8" Text="{Binding SubTask}" TextTrimming="CharacterEllipsis" Margin="0,0,0,4"/>
+            <ProgressBar Minimum="0" Maximum="100" Height="8" Value="{Binding SubProgress}" IsIndeterminate="{Binding SubIndeterminate}"/>
+        </StackPanel>
     </Grid>
 </Window>

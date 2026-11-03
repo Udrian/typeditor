@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Text;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
@@ -15,9 +19,11 @@ namespace TypeDitor.Commands
         private IRecentProvider RecentProvider { get; set; }
         private IProjectProvider ProjectProvider { get; set; }
         private IProjectModel ProjectModel { get; set; }
+        private ILogModel LogModel { get; set; }
 
         public OpenProjectCommand() : base()
         {
+            LogModel = ResourceModel.Get<ILogModel>();
             RecentProvider = ResourceModel.Get<IRecentProvider>();
             ProjectProvider = ResourceModel.Get<IProjectProvider>();
             ProjectModel = ResourceModel.Get<IProjectModel>();
@@ -46,19 +52,27 @@ namespace TypeDitor.Commands
             }
 
             OpenProjectProgressDialog progressDialog = null;
+            var logLines = new ConcurrentQueue<string>();
+            var currentStep = "Starting";
+            const string LogName = "OpenProjectErrorLog";
             //Open project
             if (!string.IsNullOrEmpty(path))
             {
                 try
                 {
+                    LogModel.AttachLogOutput(LogName, line => logLines.Enqueue($"[{DateTime.Now:HH:mm:ss}] {line}"));
                     progressDialog = new OpenProjectProgressDialog();
                     progressDialog.Show();
                     var loadedProject = await ProjectProvider.Load(path, (progress) => {
-                        progressDialog.Progress = progress;
                         if (progress >= 100)
                         {
-                            progressDialog.Close();
+                            Dispatcher.UIThread.Post(progressDialog.Close);
                         }
+                    }, true, update =>
+                    {
+                        currentStep = string.IsNullOrEmpty(update.SubTask) ? update.Message : $"{update.Message} ({update.SubTask})";
+                        logLines.Enqueue($"[{DateTime.Now:HH:mm:ss}] > {currentStep}");
+                        progressDialog.Report(update);
                     });
                     if (loadedProject != null)
                     {
@@ -71,7 +85,25 @@ namespace TypeDitor.Commands
                 catch (Exception e)
                 {
                     progressDialog?.Close();
-                    ShowError($"Error loading project:{Environment.NewLine}{e.Message}");
+                    var details = new StringBuilder();
+                    details.AppendLine($"Project: {path}");
+                    details.AppendLine($"Failed during: {currentStep}");
+                    details.AppendLine();
+                    details.AppendLine("Log:");
+                    foreach (var line in logLines) details.AppendLine(line);
+                    details.AppendLine();
+                    details.AppendLine("Exception:");
+                    details.AppendLine(e.ToString());
+
+                    ShowErrorDetails(
+                        "Could not open the project",
+                        $"{Path.GetFileNameWithoutExtension(path)} failed to load while: {currentStep}.{Environment.NewLine}{Environment.NewLine}{e.Message}",
+                        "Check that the project file and its modules are intact and that git, dotnet and typer are available. Show the details for the log of what happened before the error.",
+                        details.ToString());
+                }
+                finally
+                {
+                    LogModel.DetachLogOutput(LogName);
                 }
             }
         }
