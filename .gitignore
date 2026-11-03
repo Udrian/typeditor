@@ -350,4 +350,4 @@ MigrationBackup/
 .ionide/
 
 # TypeO
-dependency_override
+typeo_override.json
