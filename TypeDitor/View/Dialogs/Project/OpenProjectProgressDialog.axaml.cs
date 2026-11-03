@@ -1,9 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using TypeD.Models.Data;
+using TypeDitor.Models;
 
 namespace TypeDitor.View.Dialogs.Project
 {
@@ -12,11 +15,27 @@ namespace TypeDitor.View.Dialogs.Project
     /// </summary>
     public partial class OpenProjectProgressDialog : Window, INotifyPropertyChanged
     {
-        public OpenProjectProgressDialog()
+        public OpenProjectProgressDialog() : this(null) { }
+
+        public OpenProjectProgressDialog(string projectFilePath)
         {
             InitializeComponent();
+            var location = string.IsNullOrEmpty(projectFilePath) ? null : Path.GetDirectoryName(projectFilePath);
+            Splash = BrandingManager.LoadSplash(location);
+            ProjectName = string.IsNullOrEmpty(projectFilePath) ? string.Empty : Path.GetFileNameWithoutExtension(projectFilePath);
             this.DataContext = this;
+
+            // Without a title bar the window is moved by dragging anywhere on it
+            PointerPressed += (_, e) =>
+            {
+                if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) BeginMoveDrag(e);
+            };
+            Closed += (_, _) => Splash?.Dispose();
         }
+
+        public Bitmap Splash { get; }
+
+        public string ProjectName { get; }
 
         public new event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged(string propName)

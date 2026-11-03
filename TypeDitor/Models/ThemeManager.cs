@@ -259,12 +259,17 @@ namespace TypeDitor.Models
 
         // Applying
         /// <summary>Applies the editor default theme, used on startup.</summary>
-        public static void ApplyGlobal() => Apply(LoadGlobal(), null);
+        public static void ApplyGlobal()
+        {
+            Apply(LoadGlobal(), null);
+            BrandingManager.ApplyIcon((string)null);
+        }
 
-        /// <summary>Applies the editor default theme with the override of the project on top.</summary>
+        /// <summary>Applies the editor default theme with the override of the project on top, and the icon of the project.</summary>
         public static void ApplyProject(string projectLocation)
         {
             Apply(Effective(LoadGlobal(), string.IsNullOrEmpty(projectLocation) ? null : LoadProject(projectLocation)), projectLocation);
+            BrandingManager.ApplyIcon(projectLocation);
         }
 
         public static void Apply(ThemePreference preference, string projectLocation)

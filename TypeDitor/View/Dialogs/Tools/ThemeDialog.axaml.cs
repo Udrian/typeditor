@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using TypeDitor.Models;
 
 namespace TypeDitor.View.Dialogs.Tools
@@ -42,6 +43,9 @@ namespace TypeDitor.View.Dialogs.Tools
 
         private readonly Dictionary<(bool Dark, string Key), ColorPicker> Pickers = new();
         private readonly string ProjectLocation;
+        private ProjectBranding Branding;
+        // The image chosen in the dialog for a branding kind, null for the default; only kinds in here have been changed
+        private readonly Dictionary<string, string> PendingBranding = new();
         private readonly ThemePreference Global;
         private ThemePreference Project;
         private readonly ThemePreference OriginalEffective;
@@ -68,11 +72,20 @@ namespace TypeDitor.View.Dialogs.Tools
 
             ReloadSchemes();
             ScopeBox.SelectedIndex = 0;
+            LoadBranding();
             Closed += (_, _) =>
             {
-                if (!Saved) ThemeManager.Apply(OriginalEffective, ProjectLocation);
+                if (!Saved)
+                {
+                    ThemeManager.Apply(OriginalEffective, ProjectLocation);
+                    if (HasProject) BrandingManager.ApplyIcon(ProjectLocation);
+                }
+                (IconPreview.Source as IDisposable)?.Dispose();
+                (SplashPreview.Source as IDisposable)?.Dispose();
             };
         }
+
+        private bool HasProject => !string.IsNullOrEmpty(ProjectLocation);
 
         private bool ProjectScope => ScopeBox.SelectedIndex == 1;
 
@@ -265,8 +278,110 @@ namespace TypeDitor.View.Dialogs.Tools
             Process.Start(new ProcessStartInfo { FileName = ThemeManager.UserThemesFolder, UseShellExecute = true });
         }
 
+        // Branding
+        private void LoadBranding()
+        {
+            BrandingPanel.IsVisible = HasProject;
+            if (!HasProject) return;
+
+            Branding = BrandingManager.Load(ProjectLocation);
+            ShowBranding(BrandingManager.IconKind);
+            ShowBranding(BrandingManager.SplashKind);
+        }
+
+        // The full path of the image currently chosen for a kind, null for the default
+        private string BrandingFile(string kind)
+        {
+            if (PendingBranding.TryGetValue(kind, out var pending)) return pending;
+            return BrandingManager.Resolve(ProjectLocation, kind == BrandingManager.IconKind ? Branding.Icon : Branding.Splash);
+        }
+
+        private void ShowBranding(string kind)
+        {
+            var file = BrandingFile(kind);
+            var splash = kind == BrandingManager.SplashKind;
+            var bitmap = BrandingManager.LoadBitmap(file, splash);
+            var image = splash ? SplashPreview : IconPreview;
+            (image.Source as IDisposable)?.Dispose();
+            image.Source = bitmap;
+
+            (splash ? SplashSourceText : IconSourceText).Text = file == null ? "Default" : Path.GetFileName(file);
+            (splash ? SplashDefaultButton : IconDefaultButton).IsEnabled = file != null;
+            if (!splash) BrandingManager.ApplyIcon(BrandingManager.LoadBitmap(file, false));
+        }
+
+        private async void ChooseBranding(string kind)
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = kind == BrandingManager.IconKind ? "Choose the window icon" : "Choose the splash screen image",
+                AllowMultiple = false,
+                FileTypeFilter = [new FilePickerFileType("Images") { Patterns = BrandingManager.ImageExtensions }]
+            });
+            var file = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+            if (file == null) return;
+
+            if (!BrandingManager.IsImageFile(file))
+            {
+                ShowBrandingError("Choose a png, jpg, bmp or ico image.");
+                return;
+            }
+            ShowBrandingError(null);
+            PendingBranding[kind] = file;
+            ShowBranding(kind);
+        }
+
+        private void ShowBrandingError(string message)
+        {
+            BrandingError.Text = message ?? string.Empty;
+            BrandingError.IsVisible = !string.IsNullOrEmpty(message);
+        }
+
+        private void OnChooseIcon(object sender, RoutedEventArgs e) => ChooseBranding(BrandingManager.IconKind);
+
+        private void OnChooseSplash(object sender, RoutedEventArgs e) => ChooseBranding(BrandingManager.SplashKind);
+
+        private void OnDefaultIcon(object sender, RoutedEventArgs e)
+        {
+            PendingBranding[BrandingManager.IconKind] = null;
+            ShowBranding(BrandingManager.IconKind);
+        }
+
+        private void OnDefaultSplash(object sender, RoutedEventArgs e)
+        {
+            PendingBranding[BrandingManager.SplashKind] = null;
+            ShowBranding(BrandingManager.SplashKind);
+        }
+
+        private void SaveBranding()
+        {
+            foreach (var (kind, file) in PendingBranding)
+            {
+                string relative = null;
+                if (file == null) BrandingManager.Remove(ProjectLocation, kind);
+                else relative = BrandingManager.Import(ProjectLocation, file, kind);
+
+                if (kind == BrandingManager.IconKind) Branding.Icon = relative;
+                else Branding.Splash = relative;
+            }
+            BrandingManager.Save(ProjectLocation, Branding);
+        }
+
         private void OnOk(object sender, RoutedEventArgs e)
         {
+            if (HasProject && PendingBranding.Count > 0)
+            {
+                try
+                {
+                    SaveBranding();
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    ShowBrandingError($"Could not save the project branding: {ex.Message}");
+                    return;
+                }
+            }
+
             ThemeManager.SaveGlobal(Global);
             if (!string.IsNullOrEmpty(ProjectLocation))
             {

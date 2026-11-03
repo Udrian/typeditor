@@ -6,11 +6,13 @@
 		<Company>Typedeaf</Company>
 		<Product>TypeO</Product>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<ApplicationIcon>Branding\DefaultIcon.ico</ApplicationIcon>
 		<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
 		<NoWarn>$(NoWarn);AVLN3001</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
 		<AvaloniaResource Include="Icons\**"/>
+		<AvaloniaResource Include="Branding\**"/>
 		<Content Include="DefaultIcons\**" CopyToOutputDirectory="PreserveNewest"/>
 	</ItemGroup>
 	<ItemGroup>
