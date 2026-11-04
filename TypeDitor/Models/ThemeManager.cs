@@ -9,6 +9,13 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
+using System.Threading.Tasks;
+using TypeD.Helpers;
+using TypeD.Models.Data;
+using TypeD.Models.Data.SaveContexts;
+using TypeD.Models.Data.SettingContexts;
+using TypeD.Models.Interfaces;
+using TypeD.ViewModel;
 
 namespace TypeDitor.Models
 {
@@ -86,8 +93,10 @@ namespace TypeDitor.Models
 
         public static string UserRoot => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TypeO");
         public static string UserThemesFolder => Path.Combine(UserRoot, "Themes");
-        private static string GlobalFile => Path.Combine(UserRoot, "Settings", "Theme.json");
+        private static string LegacyGlobalFile => Path.Combine(UserRoot, "Settings", "Theme.json");
+        private static string GlobalFile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TypeO", "Settings", "Theme.json");
         private static string ProjectFile(string projectLocation) => Path.Combine(projectLocation, "TypeO", "Settings", "Theme.json");
+        private static string UserFile(string projectName) => Path.Combine(UserRoot, "Settings", projectName, "Theme.json");
         private static string ProjectThemesFolder(string projectLocation) => Path.Combine(projectLocation, "TypeO", "Themes");
 
         private static ThemeColors C(string accent, string background, string panel, string surface, string header, string text, string muted, string border, string hover)
@@ -221,39 +230,61 @@ namespace TypeDitor.Models
         // Preferences
         public static ThemePreference LoadGlobal()
         {
-            var preference = Read<ThemePreference>(GlobalFile) ?? new ThemePreference();
-            preference.Mode ??= DefaultMode;
-            preference.Scheme ??= DefaultScheme;
-            return preference;
+            return Effective(ReadPreference(File.Exists(GlobalFile) ? GlobalFile : LegacyGlobalFile), null);
         }
 
-        public static void SaveGlobal(ThemePreference preference) => Write(GlobalFile, preference);
+        private static ThemePreference ReadPreference(string file)
+        {
+            try
+            {
+                var context = JSON.Deserialize<ThemeSettingContext>(file);
+                if (context == null || (string.IsNullOrEmpty(context.Mode.Value) && string.IsNullOrEmpty(context.Scheme.Value)))
+                    return null;
+                return new ThemePreference
+                {
+                    Mode = string.IsNullOrEmpty(context.Mode.Value) ? null : context.Mode.Value,
+                    Scheme = string.IsNullOrEmpty(context.Scheme.Value) ? null : context.Scheme.Value
+                };
+            }
+            catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException)
+            {
+                ViewModelBase.ResourceModel.Get<ILogModel>().Log($"Could not load theme settings '{file}': {e}");
+                return null;
+            }
+        }
 
         /// <summary>Loads the theme override of a project, or null if the project uses the editor default.</summary>
         public static ThemePreference LoadProject(string projectLocation)
         {
-            var preference = Read<ThemePreference>(ProjectFile(projectLocation));
-            return preference == null || (preference.Mode == null && preference.Scheme == null) ? null : preference;
+            return ReadPreference(ProjectFile(projectLocation));
         }
 
-        /// <summary>Saves the theme override of a project; null removes it so the editor default is used.</summary>
-        public static void SaveProject(string projectLocation, ThemePreference preference)
+        /// <summary>Loads the current user's override for this project.</summary>
+        public static ThemePreference LoadUser(string projectName) => ReadPreference(UserFile(projectName));
+
+        /// <summary>Saves one scope without copying inherited settings into it. Empty choices restore inheritance.</summary>
+        public static async Task SavePreference(Project project, SettingLevel level, ThemePreference preference)
         {
-            if (preference == null)
+            var resources = ViewModelBase.ResourceModel;
+            var settings = resources.Get<ISettingModel>();
+            var context = new ThemeSettingContext
             {
-                var file = ProjectFile(projectLocation);
-                if (File.Exists(file)) File.Delete(file);
-                return;
-            }
-            Write(ProjectFile(projectLocation), preference);
+                Mode = new Setting<string>(string.Empty) { Value = preference?.Mode ?? string.Empty },
+                Scheme = new Setting<string>(string.Empty) { Value = preference?.Scheme ?? string.Empty }
+            };
+            settings.SetContext(context, level);
+            var save = new SettingSaveContext();
+            save.Init(resources);
+            save.Settings.Add(context);
+            await save.SaveAction(project);
         }
 
-        public static ThemePreference Effective(ThemePreference global, ThemePreference project)
+        public static ThemePreference Effective(ThemePreference global, ThemePreference project, ThemePreference user = null)
         {
             return new ThemePreference
             {
-                Mode = project?.Mode ?? global?.Mode ?? DefaultMode,
-                Scheme = project?.Scheme ?? global?.Scheme ?? DefaultScheme
+                Mode = user?.Mode ?? project?.Mode ?? global?.Mode ?? DefaultMode,
+                Scheme = user?.Scheme ?? project?.Scheme ?? global?.Scheme ?? DefaultScheme
             };
         }
 
@@ -262,13 +293,15 @@ namespace TypeDitor.Models
         public static void ApplyGlobal()
         {
             Apply(LoadGlobal(), null);
+            ViewModelBase.ResourceModel.Get<ISettingModel>().InitContext<ThemeSettingContext>(null);
             BrandingManager.ApplyIcon((string)null);
         }
 
         /// <summary>Applies the editor default theme with the override of the project on top, and the icon of the project.</summary>
-        public static void ApplyProject(string projectLocation)
+        public static void ApplyProject(string projectLocation, string projectName)
         {
-            Apply(Effective(LoadGlobal(), string.IsNullOrEmpty(projectLocation) ? null : LoadProject(projectLocation)), projectLocation);
+            Apply(Effective(LoadGlobal(), string.IsNullOrEmpty(projectLocation) ? null : LoadProject(projectLocation),
+                string.IsNullOrEmpty(projectLocation) ? null : LoadUser(projectName)), projectLocation);
             BrandingManager.ApplyIcon(projectLocation);
         }
 

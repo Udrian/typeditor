@@ -63,7 +63,7 @@ namespace TypeDitor.Commands
                 {
                     LogModel.AttachLogOutput(LogName, line => logLines.Enqueue($"[{DateTime.Now:HH:mm:ss}] {line}"));
                     // Switch to the theme of the project before showing its progress
-                    ThemeManager.ApplyProject(Path.GetDirectoryName(path));
+                    ThemeManager.ApplyProject(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
                     progressDialog = new OpenProjectProgressDialog(path);
                     await progressDialog.ShowAndWaitForFirstFrameAsync();
                     var loadedProject = await ProjectProvider.Load(path, (progress) => {

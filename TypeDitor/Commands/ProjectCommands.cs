@@ -23,7 +23,7 @@ namespace TypeDitor.Commands
 
         protected void OpenMainWindow(Project loadedProject)
         {
-            ThemeManager.ApplyProject(loadedProject.Location);
+            ThemeManager.ApplyProject(loadedProject.Location, loadedProject.ProjectName);
             var currentMainWindow = ViewModelBase.MainWindow;
             var mainWindow = new MainWindow(loadedProject);
             ViewModelBase.MainWindow = mainWindow;

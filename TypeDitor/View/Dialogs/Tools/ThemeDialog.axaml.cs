@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using TypeDitor.Models;
+using TypeD.Models.Data;
 
 namespace TypeDitor.View.Dialogs.Tools
 {
@@ -43,24 +44,31 @@ namespace TypeDitor.View.Dialogs.Tools
 
         private readonly Dictionary<(bool Dark, string Key), ColorPicker> Pickers = new();
         private readonly string ProjectLocation;
-        private ProjectBranding Branding;
+        private readonly TypeD.Models.Data.Project LoadedProject;
+        private TypeD.Models.Data.SettingContexts.BrandingSettingContext Branding;
         // The image chosen in the dialog for a branding kind, null for the default; only kinds in here have been changed
         private readonly Dictionary<string, string> PendingBranding = new();
         private readonly ThemePreference Global;
         private ThemePreference Project;
+        private ThemePreference User;
+        private readonly HashSet<SettingLevel> ChangedScopes = new();
         private readonly ThemePreference OriginalEffective;
         private bool Loading;
         private bool Saved;
+        private bool Saving;
 
         public ThemeDialog() : this(null) { }
 
-        public ThemeDialog(string projectLocation)
+        public ThemeDialog(TypeD.Models.Data.Project project)
         {
             InitializeComponent();
+            LoadedProject = project;
+            var projectLocation = project?.Location;
             ProjectLocation = projectLocation;
             Global = ThemeManager.LoadGlobal();
             Project = string.IsNullOrEmpty(projectLocation) ? null : ThemeManager.LoadProject(projectLocation);
-            OriginalEffective = ThemeManager.Effective(Global, Project);
+            User = project == null ? null : ThemeManager.LoadUser(project.ProjectName);
+            OriginalEffective = ThemeManager.Effective(Global, Project, User);
 
             BuildPickers(false, LightColors);
             BuildPickers(true, DarkColors);
@@ -88,8 +96,10 @@ namespace TypeDitor.View.Dialogs.Tools
         private bool HasProject => !string.IsNullOrEmpty(ProjectLocation);
 
         private bool ProjectScope => ScopeBox.SelectedIndex == 1;
+        private bool UserScope => ScopeBox.SelectedIndex == 2;
+        private SettingLevel CurrentLevel => UserScope ? SettingLevel.User : ProjectScope ? SettingLevel.Project : SettingLevel.System;
 
-        private ThemePreference Current => ProjectScope ? Project : Global;
+        private ThemePreference Current => UserScope ? User : ProjectScope ? Project : Global;
 
         private SchemeItem SelectedScheme => SchemeBox.SelectedItem as SchemeItem;
 
@@ -157,17 +167,24 @@ namespace TypeDitor.View.Dialogs.Tools
         private void ShowScope()
         {
             Loading = true;
-            var project = ProjectScope;
-            OverrideCheck.IsVisible = project;
-            OverrideCheck.IsChecked = project && Project != null;
-            ChoicePanel.IsEnabled = !project || Project != null;
+            var inherited = ProjectScope || UserScope;
+            OverrideCheck.IsVisible = inherited;
+            OverrideCheck.Content = UserScope ? "Override the theme for me in this project" : "Use a different theme for this project";
+            OverrideCheck.IsChecked = inherited && Current != null;
+            InheritButton.IsVisible = inherited;
+            InheritButton.IsEnabled = Current != null;
+            ChoicePanel.IsEnabled = !inherited || Current != null;
 
-            var preference = Current ?? ThemeManager.Effective(Global, null);
+            var preference = UserScope
+                ? ThemeManager.Effective(Global, Project, User)
+                : ThemeManager.Effective(Global, ProjectScope ? Project : null);
             ModeBox.SelectedIndex = Math.Max(0, Array.IndexOf(ThemeManager.Modes, preference.Mode));
             SelectScheme(preference.Scheme);
-            ScopeHint.Text = project
-                ? "Switches to this theme whenever the project is loaded."
-                : Project != null ? "This project has its own theme, so changes here are not visible while it is open." : "Applied when the editor starts and for projects without their own theme.";
+            ScopeHint.Text = UserScope
+                ? "Overrides System and Project for you in this project. Use inherited theme restores the Project theme, or System if none is set."
+                : ProjectScope
+                    ? "Shared project theme. A user override takes priority."
+                    : "System-wide editor default. Project and User choices take priority.";
             Loading = false;
 
             PopulateEditor(SelectedScheme?.Scheme);
@@ -182,18 +199,23 @@ namespace TypeDitor.View.Dialogs.Tools
         private void OnOverrideChanged(object sender, RoutedEventArgs e)
         {
             if (Loading) return;
-            Project = OverrideCheck.IsChecked == true
+            var preference = OverrideCheck.IsChecked == true
                 ? new ThemePreference { Mode = ThemeManager.Modes[Math.Max(0, ModeBox.SelectedIndex)], Scheme = SelectedScheme?.Scheme.Name }
                 : null;
-            ChoicePanel.IsEnabled = Project != null;
-            Preview();
+            if (UserScope) User = preference;
+            else Project = preference;
+            ChangedScopes.Add(CurrentLevel);
+            ShowScope();
         }
+
+        private void OnInherit(object sender, RoutedEventArgs e) => OverrideCheck.IsChecked = false;
 
         private void OnModeChanged(object sender, SelectionChangedEventArgs e)
         {
             if (Loading || Current == null) return;
 
             Current.Mode = ThemeManager.Modes[Math.Max(0, ModeBox.SelectedIndex)];
+            ChangedScopes.Add(CurrentLevel);
             Preview();
         }
 
@@ -205,12 +227,13 @@ namespace TypeDitor.View.Dialogs.Tools
             if (Current == null) return;
 
             Current.Scheme = SelectedScheme.Scheme.Name;
+            ChangedScopes.Add(CurrentLevel);
             Preview();
         }
 
         private void Preview()
         {
-            ThemeManager.Apply(ThemeManager.Effective(Global, Project), ProjectLocation);
+            ThemeManager.Apply(ThemeManager.Effective(Global, Project, User), ProjectLocation);
         }
 
         private ThemeColors ReadColors(bool dark)
@@ -265,9 +288,11 @@ namespace TypeDitor.View.Dialogs.Tools
             if (SelectedScheme is not { Scheme.IsBuiltIn: false } item) return;
 
             ThemeManager.DeleteCustom(item.Scheme.Name);
-            foreach (var preference in new[] { Global, Project }.Where(p => p != null && string.Equals(p.Scheme, item.Scheme.Name, StringComparison.OrdinalIgnoreCase)))
+            foreach (var (level, preference) in new[] { (SettingLevel.System, Global), (SettingLevel.Project, Project), (SettingLevel.User, User) })
             {
+                if (preference == null || !string.Equals(preference.Scheme, item.Scheme.Name, StringComparison.OrdinalIgnoreCase)) continue;
                 preference.Scheme = ThemeManager.DefaultScheme;
+                ChangedScopes.Add(level);
             }
             ReloadSchemes(Current?.Scheme ?? ThemeManager.DefaultScheme);
         }
@@ -293,7 +318,7 @@ namespace TypeDitor.View.Dialogs.Tools
         private string BrandingFile(string kind)
         {
             if (PendingBranding.TryGetValue(kind, out var pending)) return pending;
-            return BrandingManager.Resolve(ProjectLocation, kind == BrandingManager.IconKind ? Branding.Icon : Branding.Splash);
+            return BrandingManager.Resolve(ProjectLocation, kind == BrandingManager.IconKind ? Branding.Icon.Value : Branding.Splash.Value);
         }
 
         private void ShowBranding(string kind)
@@ -353,7 +378,7 @@ namespace TypeDitor.View.Dialogs.Tools
             ShowBranding(BrandingManager.SplashKind);
         }
 
-        private void SaveBranding()
+        private async System.Threading.Tasks.Task SaveBranding()
         {
             foreach (var (kind, file) in PendingBranding)
             {
@@ -361,34 +386,55 @@ namespace TypeDitor.View.Dialogs.Tools
                 if (file == null) BrandingManager.Remove(ProjectLocation, kind);
                 else relative = BrandingManager.Import(ProjectLocation, file, kind);
 
-                if (kind == BrandingManager.IconKind) Branding.Icon = relative;
-                else Branding.Splash = relative;
+                if (kind == BrandingManager.IconKind) Branding.Icon.Value = relative ?? string.Empty;
+                else Branding.Splash.Value = relative ?? string.Empty;
             }
-            BrandingManager.Save(ProjectLocation, Branding);
+            await BrandingManager.Save(LoadedProject, Branding);
         }
 
-        private void OnOk(object sender, RoutedEventArgs e)
+        private async void OnOk(object sender, RoutedEventArgs e)
         {
-            if (HasProject && PendingBranding.Count > 0)
+            if (Saving) return;
+            Saving = true;
+            IsEnabled = false;
+            try
             {
+                if (HasProject && PendingBranding.Count > 0)
+                {
+                    try
+                    {
+                        await SaveBranding();
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                        ShowBrandingError($"Could not save the project branding: {ex.Message}");
+                        return;
+                    }
+                }
+
                 try
                 {
-                    SaveBranding();
+                    foreach (var level in ChangedScopes.ToArray())
+                    {
+                        await ThemeManager.SavePreference(LoadedProject, level,
+                            level == SettingLevel.User ? User : level == SettingLevel.Project ? Project : Global);
+                        ChangedScopes.Remove(level);
+                    }
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
-                    ShowBrandingError($"Could not save the project branding: {ex.Message}");
+                    ThemeError.Text = $"Could not save theme settings: {ex.Message}";
+                    ThemeError.IsVisible = true;
                     return;
                 }
+                Saved = true;
+                Close();
             }
-
-            ThemeManager.SaveGlobal(Global);
-            if (!string.IsNullOrEmpty(ProjectLocation))
+            finally
             {
-                ThemeManager.SaveProject(ProjectLocation, Project);
+                IsEnabled = true;
+                Saving = false;
             }
-            Saved = true;
-            Close();
         }
 
         private void OnCancel(object sender, RoutedEventArgs e)

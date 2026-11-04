@@ -13,11 +13,14 @@
                 <StackPanel x:Name="ScopePanel" Spacing="6">
                     <TextBlock Text="Apply to" FontWeight="SemiBold"/>
                     <ComboBox x:Name="ScopeBox" HorizontalAlignment="Stretch" SelectionChanged="OnScopeChanged">
-                        <ComboBoxItem Content="Editor default (applied on startup)"/>
-                        <ComboBoxItem Content="This project only"/>
+                        <ComboBoxItem Content="System - editor default"/>
+                        <ComboBoxItem Content="Project - shared project theme"/>
+                        <ComboBoxItem Content="User - my override for this project"/>
                     </ComboBox>
                     <CheckBox x:Name="OverrideCheck" Content="Use a different theme for this project" IsVisible="False" IsCheckedChanged="OnOverrideChanged"/>
+                    <Button x:Name="InheritButton" Content="Use inherited theme" IsVisible="False" Click="OnInherit"/>
                     <TextBlock x:Name="ScopeHint" Opacity="0.7" TextWrapping="Wrap" FontSize="12"/>
+                    <TextBlock x:Name="ThemeError" Foreground="#D32F2F" TextWrapping="Wrap" IsVisible="False"/>
                 </StackPanel>
 
                 <StackPanel x:Name="ChoicePanel" Spacing="12">

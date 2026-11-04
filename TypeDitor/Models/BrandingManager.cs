@@ -2,22 +2,20 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Styling;
+using TypeD.Models.Data;
+using TypeD.Models.Data.SaveContexts;
+using TypeD.Models.Data.SettingContexts;
+using TypeD.Models.Interfaces;
+using TypeD.ViewModel;
 
 namespace TypeDitor.Models
 {
-    /// <summary>The icon and splash screen of a project, as paths relative to the project folder. Null uses the default.</summary>
-    public class ProjectBranding
-    {
-        public string Icon { get; set; }
-        public string Splash { get; set; }
-    }
-
     /// <summary>Loads, stores and applies the project specific window icon and the splash screen shown while a project opens.</summary>
     public static class BrandingManager
     {
@@ -27,37 +25,38 @@ namespace TypeDitor.Models
 
         private static readonly Uri DefaultIconUri = new("avares://TypeDitor/Branding/DefaultIcon.png");
         private static readonly Uri DefaultSplashUri = new("avares://TypeDitor/Branding/DefaultSplash.png");
-        private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
         private static Style IconStyle;
 
-        private static string SettingsFile(string projectLocation) => Path.Combine(projectLocation, "TypeO", "Settings", "Branding.json");
         public static string BrandingFolder(string projectLocation) => Path.Combine(projectLocation, "TypeO", "Branding");
 
         // Settings
-        public static ProjectBranding Load(string projectLocation)
+        public static BrandingSettingContext Load(string projectLocation)
         {
-            if (string.IsNullOrEmpty(projectLocation)) return new ProjectBranding();
             try
             {
-                var file = SettingsFile(projectLocation);
-                return (File.Exists(file) ? JsonSerializer.Deserialize<ProjectBranding>(File.ReadAllText(file)) : null) ?? new ProjectBranding();
+                return BrandingSettingContext.LoadWorkspace(projectLocation);
             }
             catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException)
             {
-                return new ProjectBranding();
+                ViewModelBase.ResourceModel?.Get<ILogModel>()?.Log($"Could not load workspace branding '{projectLocation}': {e}");
+                return new BrandingSettingContext();
             }
         }
 
-        public static void Save(string projectLocation, ProjectBranding branding)
+        public static async Task Save(Project project, BrandingSettingContext branding)
         {
-            var file = SettingsFile(projectLocation);
-            if (branding == null || (branding.Icon == null && branding.Splash == null))
-            {
-                if (File.Exists(file)) File.Delete(file);
-                return;
-            }
-            Directory.CreateDirectory(Path.GetDirectoryName(file));
-            File.WriteAllText(file, JsonSerializer.Serialize(branding, JsonOptions));
+            var resources = ViewModelBase.ResourceModel;
+            var settings = resources.Get<ISettingModel>();
+            var context = settings.GetContext<BrandingSettingContext>(SettingLevel.Project);
+            context.Icon.Value = branding.Icon.Value;
+            context.Splash.Value = branding.Splash.Value;
+            settings.SetContext(context, SettingLevel.Project);
+
+            // Branding must be available to the splash loader on the next project launch.
+            var save = new SettingSaveContext();
+            save.Init(resources);
+            save.Settings.Add(context);
+            await save.SaveAction(project);
         }
 
         /// <summary>
@@ -117,9 +116,9 @@ namespace TypeDitor.Models
             return new Bitmap(asset);
         }
 
-        public static Bitmap LoadSplash(string projectLocation) => LoadBitmap(Resolve(projectLocation, Load(projectLocation).Splash), true);
+        public static Bitmap LoadSplash(string projectLocation) => LoadBitmap(Resolve(projectLocation, Load(projectLocation).Splash.Value), true);
 
-        public static Bitmap LoadIcon(string projectLocation) => LoadBitmap(Resolve(projectLocation, Load(projectLocation).Icon), false);
+        public static Bitmap LoadIcon(string projectLocation) => LoadBitmap(Resolve(projectLocation, Load(projectLocation).Icon.Value), false);
 
         // Applying
         /// <summary>Uses the icon of the project, or the default icon when the project has none or no project is given, for all editor windows.</summary>

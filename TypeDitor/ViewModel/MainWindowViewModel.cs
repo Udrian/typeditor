@@ -236,12 +236,12 @@ namespace TypeDitor.ViewModel
         {
             get
             {
-                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
                 return setting?.SizeX?.Value ?? 1024;
             }
             set
             {
-                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
                 setting.SizeX.Value = value;
                 SettingModel.SetContext(setting);
             }
@@ -251,12 +251,12 @@ namespace TypeDitor.ViewModel
         {
             get
             {
-                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
                 return setting?.SizeY?.Value ?? 768;
             }
             set
             {
-                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
                 setting.SizeY.Value = value;
                 SettingModel.SetContext(setting);
             }
@@ -279,7 +279,7 @@ namespace TypeDitor.ViewModel
                 if (value is not (WindowState.Normal or WindowState.Maximized))
                     return;
 
-                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
                 setting.Fullscreen.Value = value == WindowState.Maximized;
                 SettingModel.SetContext(setting);
             }
@@ -297,7 +297,7 @@ namespace TypeDitor.ViewModel
             HookModel = ResourceModel.Get<IHookModel>();
             SaveModel = ResourceModel.Get<ISaveModel>();
             SettingModel = ResourceModel.Get<ISettingModel>();
-            _windowState = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local)?.Fullscreen.Value == true
+            _windowState = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User)?.Fullscreen.Value == true
                 ? WindowState.Maximized
                 : WindowState.Normal;
             PanelModel = ResourceModel.Get<IPanelModel>();
@@ -424,7 +424,7 @@ namespace TypeDitor.ViewModel
         // Functions
         public void InitUI(MainWindow mainWindow)
         {
-            var dockLayoutSetting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            var dockLayoutSetting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
             var savedDockLayout = dockLayoutSetting.DockLayout.Value;
             IRootDock layout;
             if (string.IsNullOrWhiteSpace(savedDockLayout))
@@ -482,14 +482,14 @@ namespace TypeDitor.ViewModel
                 Click = param => RunProjectCommand.Execute(param)
             });
 
-            var toolbarSetting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            var toolbarSetting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
             var groupOrder = toolbarSetting.ToolbarGroupOrder.Value?.Split(';', StringSplitOptions.RemoveEmptyEntries);
             ViewHelper.InitToolbar(mainWindow.ToolbarPanel, toolbar, this, groupOrder, SaveToolbarGroupOrder);
         }
 
         private void SaveToolbarGroupOrder(IReadOnlyList<string> groupOrder)
         {
-            var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
             setting.ToolbarGroupOrder.Value = string.Join(';', groupOrder);
             SettingModel.SetContext(setting);
         }
@@ -536,7 +536,7 @@ namespace TypeDitor.ViewModel
 
         public void OpenThemeWindow()
         {
-            var dialog = new ThemeDialog(LoadedProject?.Location);
+            var dialog = new ThemeDialog(LoadedProject);
             dialog.Show(MainWindow);
         }
 
@@ -594,7 +594,7 @@ namespace TypeDitor.ViewModel
             if (Layout == null)
                 return;
 
-            var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
             setting.DockLayout.Value = new AvaloniaDockSerializer().Serialize(Layout);
             SettingModel.SetContext(setting);
         }

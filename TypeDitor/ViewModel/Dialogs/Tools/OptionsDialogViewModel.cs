@@ -132,7 +132,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
 
         public void InitUI()
         {
-            var hook = new OptionsHook() { Level = SettingLevel.Local };
+            var hook = new OptionsHook() { Level = SettingLevel.User };
             HookModel.Shoot(hook);
 
             Categories.Clear();
@@ -191,7 +191,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             }
 
             command.Shortcut = shortcut ?? string.Empty;
-            var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
+            var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
             var overrides = setting.ShortcutOverrides.Value;
             if (overrides == null)
             {
@@ -204,7 +204,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             else
                 overrides[command.Id] = command.Shortcut;
 
-            SettingModel.SetContext(setting, SettingLevel.Local);
+            SettingModel.SetContext(setting, SettingLevel.User);
             ShortcutError = string.Empty;
             OnPropertyChanged(nameof(ShortcutError));
             return true;
