@@ -1,5 +1,22 @@
 # typeditor
 
+## Options
+
+Ordinary settings use the same registered property editors as the Properties
+panel, selected by the declared `ISetting` value type (even for null values).
+Edits pass typed values to the setting's save callback. Revert restores the
+default value and refreshes the editor.
+
+**Viewer > Viewer Clear Color** changes the editor scene's background immediately
+and is saved in the Viewer settings context. Revert restores the original purple
+background. Game scene backgrounds are not changed.
+
+Shortcuts keep their key-combination capture field, conflict checks, and
+Backspace/Delete clearing behavior.
+
+Run the options editor regression tests with
+`dotnet test TypeDitorTest\TypeDitorTest.csproj --filter FullyQualifiedName~SettingEditorTests`.
+
 ## Theme settings
 
 The Theme dialog saves the mode and color scheme using `ThemeSettingContext`.

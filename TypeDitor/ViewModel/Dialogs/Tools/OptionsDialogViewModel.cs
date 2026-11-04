@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
 using TypeD.Models.Data.SettingContexts;
@@ -35,25 +36,10 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             public EditorCommand Command { get; }
             public bool IsShortcut => Command != null;
             public string ShortcutName => IsShortcut ? "Shortcut" : "Value";
+            public PropertyNode Editor { get; }
+            public IDataTemplate EditorTemplate { get; }
 
-            public string Value
-            {
-                get => IsShortcut ? Command.Shortcut : Item.Setting.GetValue()?.ToString() ?? string.Empty;
-                set
-                {
-                    if (IsShortcut)
-                    {
-                        SetShortcut(Command, value);
-                        OnPropertyChanged();
-                        OnPropertyChanged(nameof(CanRevert));
-                        return;
-                    }
-
-                    Item.Set(value);
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(CanRevert));
-                }
-            }
+            public string Value => Command?.Shortcut;
 
             public bool CanRevert
             {
@@ -68,9 +54,21 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 }
             }
 
-            public Option(SettingItem item)
+            public Option(SettingItem item, IPropertyModel propertyModel)
             {
                 Item = item;
+                var property = new Property
+                {
+                    Name = item.Title,
+                    Description = item.Description,
+                    Group = item.Category,
+                    Type = item.Setting.GetValueType(),
+                    Value = item.Setting.GetValue()
+                };
+                var definition = propertyModel.Get(property.Type);
+                Editor = definition?.CreateNode(null, property, (_, value) => SetValue(value))
+                    ?? new PropertyNode(null, property, (_, value) => SetValue(value));
+                EditorTemplate = (definition ?? propertyModel.Get(typeof(string)))?.CreateTemplate();
             }
 
             public Option(EditorCommand command, Action<EditorCommand, string> setShortcut)
@@ -87,9 +85,17 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 if (IsShortcut)
                     UpdateShortcut(Command.DefaultShortcut);
                 else
-                    Item.Set(Item.Setting.GetDefaultValue());
+                    SetValue(Item.Setting.GetDefaultValue());
 
                 OnPropertyChanged(nameof(Value));
+                OnPropertyChanged(nameof(CanRevert));
+            }
+
+            private void SetValue(object value)
+            {
+                Item.Set(value);
+                Editor.Property.Value = Item.Setting.GetValue();
+                Editor.RefreshValue();
                 OnPropertyChanged(nameof(CanRevert));
             }
 
@@ -106,6 +112,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
 
         private readonly IHookModel HookModel;
         private readonly ISettingModel SettingModel;
+        private readonly IPropertyModel PropertyModel;
         private readonly IEditorCommandRegistry CommandRegistry;
         private SettingCategory _selectedCategory;
 
@@ -127,6 +134,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         {
             HookModel = ResourceModel.Get<IHookModel>();
             SettingModel = ResourceModel.Get<ISettingModel>();
+            PropertyModel = ResourceModel.Get<IPropertyModel>();
             CommandRegistry = ResourceModel.Get<IEditorCommandRegistry>();
         }
 
@@ -146,7 +154,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                     categories.Add(categoryName, category);
                 }
 
-                category.Options.Add(new Option(item));
+                category.Options.Add(new Option(item, PropertyModel));
             }
 
             var shortcutCategory = new SettingCategory("Shortcuts");

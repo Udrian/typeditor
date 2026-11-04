@@ -46,11 +46,16 @@
                                                                Margin="0,3,12,0" TextWrapping="Wrap"
                                                                Foreground="#777777"/>
                                                     <TextBox Grid.Column="1" Grid.RowSpan="2"
-                                                             Name="ValueBox" Text="{Binding Value, Mode=TwoWay}"
-                                                             IsReadOnly="{Binding IsShortcut}"
+                                                             Name="ValueBox" Text="{Binding Value, Mode=OneWay}"
+                                                             IsVisible="{Binding IsShortcut}" IsReadOnly="True"
                                                              PlaceholderText="Press a key combination"
                                                              MinWidth="220" VerticalAlignment="Center"
                                                              KeyDown="ValueBox_KeyDown"/>
+                                                    <ContentControl Grid.Column="1" Grid.RowSpan="2"
+                                                                    Content="{Binding Editor}"
+                                                                    ContentTemplate="{Binding EditorTemplate}"
+                                                                    IsVisible="{Binding !IsShortcut}"
+                                                                    MinWidth="220" VerticalAlignment="Center"/>
                                                     <Button Grid.Column="2" Grid.RowSpan="2"
                                                             Content="Revert" IsEnabled="{Binding CanRevert}"
                                                             Click="Revert_Click" Margin="8,0,0,0"
