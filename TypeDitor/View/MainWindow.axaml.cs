@@ -39,9 +39,15 @@ namespace TypeDitor.View
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
             // Let focused text boxes keep the standard text editing shortcuts (select all, copy, paste, ...).
-            if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox
+            var textBoxFocused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox;
+            if (textBoxFocused
                 && e.KeyModifiers == KeyModifiers.Control
                 && e.Key is Key.A or Key.C or Key.V or Key.X or Key.Z or Key.Y)
+                return;
+            // Navigation and editing keys without Ctrl/Alt/Meta (Home, End, Delete, ...) belong to the text box.
+            if (textBoxFocused
+                && (e.KeyModifiers & (KeyModifiers.Control | KeyModifiers.Alt | KeyModifiers.Meta)) == 0
+                && e.Key is Key.Home or Key.End or Key.Delete or Key.Back or Key.Left or Key.Right or Key.Up or Key.Down or Key.PageUp or Key.PageDown)
                 return;
             var shortcut = TypeD.Models.Data.EditorShortcut.FromKey(
                 e.Key.ToString(),
