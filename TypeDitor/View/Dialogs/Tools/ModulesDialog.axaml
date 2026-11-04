@@ -41,7 +41,7 @@
         </Grid>
         <DockPanel DockPanel.Dock="Bottom" Margin="0,10,0,0" IsEnabled="{Binding Idle}">
             <Button DockPanel.Dock="Right" Content="_New module..." Margin="10,0,0,0" Click="NewModule_Click" />
-            <TextBox Name="NewModuleName" Watermark="Name of new module"/>
+            <TextBox Name="NewModuleName" PlaceholderText="Name of new module"/>
         </DockPanel>
 
 

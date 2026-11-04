@@ -17,6 +17,7 @@
             <Button x:Name="DetailsButton" Content="Show details" Click="OnToggleDetails"/>
             <Button x:Name="CopyButton" Content="Copy" Click="OnCopy" IsVisible="False"/>
             <Button x:Name="ExitButton" Content="Exit" Click="OnExit"/>
+            <Button x:Name="IgnoreButton" Content="Ignore" Click="OnIgnore"/>
             <Button x:Name="ReloadButton" Content="Reload" Click="OnReload" IsDefault="True"/>
         </StackPanel>
     </Grid>

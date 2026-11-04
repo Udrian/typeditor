@@ -95,6 +95,9 @@ namespace TypeDitor.Models
                     await closed.Task;
                 }
 
+                if (dialog.Ignored)
+                    return;
+
                 if (!canReload)
                     Environment.Exit(1);
             }

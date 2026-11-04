@@ -88,12 +88,12 @@
                     <StackPanel Spacing="8" Margin="0,8,0,0">
                         <TextBlock Opacity="0.7" TextWrapping="Wrap" FontSize="12"
                                    Text="The colors below start from the selected scheme. Change what you want and save it under a name to make your own theme. Themes are json files in your themes folder, and a project can carry its own in TypeO/Themes."/>
-                        <TextBox x:Name="CustomName" Watermark="Theme name"/>
+                        <TextBox x:Name="CustomName" PlaceholderText="Theme name"/>
                         <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="8">
                             <TextBlock Grid.Row="0" Text="Corner radius" VerticalAlignment="Center"/>
                             <NumericUpDown x:Name="RadiusBox" Grid.Row="0" Grid.Column="2" Minimum="0" Maximum="30" Increment="1" FormatString="0" Width="140"/>
                             <TextBlock Grid.Row="1" Text="Font (empty for the default)" VerticalAlignment="Center"/>
-                            <TextBox x:Name="FontBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Width="220" Watermark="e.g. Consolas"/>
+                            <TextBox x:Name="FontBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Width="220" PlaceholderText="e.g. Consolas"/>
                         </Grid>
                         <TabControl x:Name="EditorTabs">
                             <TabItem Header="Light mode">

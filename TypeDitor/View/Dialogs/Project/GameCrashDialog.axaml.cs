@@ -20,6 +20,8 @@ namespace TypeDitor.View.Dialogs.Project
         private readonly ICrashModel _crashModel;
         private bool _reloading;
 
+        public bool Ignored { get; private set; } = false;
+
         public GameCrashDialog()
         {
             InitializeComponent();
@@ -93,6 +95,12 @@ namespace TypeDitor.View.Dialogs.Project
             {
                 await Clipboard.SetTextAsync(DetailsBox.Text ?? "");
             }
+        }
+
+        private void OnIgnore(object sender, RoutedEventArgs e)
+        {
+            Ignored = true;
+            Close();
         }
 
         private void OnExit(object sender, RoutedEventArgs e)
