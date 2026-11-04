@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TypeDitor.View.Dialogs.Project.GameCrashDialog"
+        Title="Crash" Width="560" SizeToContent="Height" MinHeight="200"
+        WindowStartupLocation="CenterOwner" CanResize="True">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="20">
+        <TextBlock Grid.Row="0" x:Name="TitleText" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="1" x:Name="SummaryText" Margin="0,10,0,0" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="2" x:Name="HintText" Margin="0,10,0,0" TextWrapping="Wrap" Opacity="0.7"/>
+        <StackPanel Grid.Row="3" x:Name="StatusPanel" Margin="0,12,0,0" Spacing="6" IsVisible="False">
+            <TextBlock x:Name="StatusText" TextWrapping="Wrap"/>
+            <ProgressBar x:Name="StatusProgress" IsIndeterminate="True"/>
+        </StackPanel>
+        <TextBox Grid.Row="4" x:Name="DetailsBox" Margin="0,12,0,0" Height="300" IsVisible="False"
+                 IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas,Menlo,monospace"/>
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+            <Button x:Name="DetailsButton" Content="Show details" Click="OnToggleDetails"/>
+            <Button x:Name="CopyButton" Content="Copy" Click="OnCopy" IsVisible="False"/>
+            <Button x:Name="ExitButton" Content="Exit" Click="OnExit"/>
+            <Button x:Name="ReloadButton" Content="Reload" Click="OnReload" IsDefault="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

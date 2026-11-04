@@ -21,6 +21,7 @@ namespace TypeDitor
             Resources.Add("ResourceModel", resourceModel);
             TypeDInit.Init(resourceModel);
             ThemeManager.ApplyGlobal();
+            CrashHandler.Init(resourceModel);
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

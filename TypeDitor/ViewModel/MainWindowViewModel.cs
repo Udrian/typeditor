@@ -66,6 +66,7 @@ namespace TypeDitor.ViewModel
         IPanelModel PanelModel { get; set; }
         IEditorCommandRegistry EditorCommandRegistry { get; set; }
         ICommandHistoryModel CommandHistoryModel { get; set; }
+        ICrashModel CrashModel { get; set; }
 
         // Commands
         public BuildProjectCommand BuildProjectCommand { get; set; }
@@ -242,6 +243,9 @@ namespace TypeDitor.ViewModel
             PanelModel = ResourceModel.Get<IPanelModel>();
             EditorCommandRegistry = ResourceModel.Get<IEditorCommandRegistry>();
             CommandHistoryModel = ResourceModel.Get<ICommandHistoryModel>();
+            CrashModel = ResourceModel.Get<ICrashModel>();
+            // Crashes of the loaded game or module assemblies are reported against the open project
+            CrashModel.CurrentProject = loadedProject;
             DockFactory = new TypeDockFactory(ResourceModel);
             DockFactory.DockableClosed += (_, args) =>
             {
@@ -515,6 +519,9 @@ namespace TypeDitor.ViewModel
             SaveDockLayout();
             HookModel.Shoot(new ExitHook() { Project = LoadedProject });
             TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
+            // Another project may already have been opened in a new main window
+            if (CrashModel.CurrentProject == LoadedProject)
+                CrashModel.CurrentProject = null;
             HookModel.RemoveHook<BuildStatusChangedHook>(OnBuildStatusChanged);
             foreach (var registration in CommandRegistrations)
                 registration.Dispose();
