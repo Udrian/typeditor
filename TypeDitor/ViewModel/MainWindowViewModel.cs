@@ -262,15 +262,23 @@ namespace TypeDitor.ViewModel
             }
         }
 
+        private WindowState _windowState;
+
         public WindowState Maximized
         {
-            get
-            {
-                var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
-                return setting?.Fullscreen.Value == true ? WindowState.Maximized : WindowState.Normal;
-            }
+            get => _windowState;
             set
             {
+                if (_windowState == value)
+                    return;
+
+                _windowState = value;
+                OnPropertyChanged();
+
+                // Minimizing must not overwrite the state used when opening the editor again.
+                if (value is not (WindowState.Normal or WindowState.Maximized))
+                    return;
+
                 var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local);
                 setting.Fullscreen.Value = value == WindowState.Maximized;
                 SettingModel.SetContext(setting);
@@ -289,6 +297,9 @@ namespace TypeDitor.ViewModel
             HookModel = ResourceModel.Get<IHookModel>();
             SaveModel = ResourceModel.Get<ISaveModel>();
             SettingModel = ResourceModel.Get<ISettingModel>();
+            _windowState = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.Local)?.Fullscreen.Value == true
+                ? WindowState.Maximized
+                : WindowState.Normal;
             PanelModel = ResourceModel.Get<IPanelModel>();
             EditorCommandRegistry = ResourceModel.Get<IEditorCommandRegistry>();
             CommandHistoryModel = ResourceModel.Get<ICommandHistoryModel>();
