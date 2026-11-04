@@ -15,15 +15,19 @@
             <Expander Margin="0,3" IsExpanded="False">
                 <Expander.Header>
                     <Border Background="#343943" CornerRadius="3" Padding="8,6">
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
                             <TextBlock Text="{Binding Severity}" FontWeight="Bold" Foreground="White"
                                        Margin="0,0,8,2"/>
                             <TextBlock Grid.Column="1" Text="{Binding Code}" Foreground="#C9D1D9"
                                        FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Summary}"
+                            <Border Grid.Column="2" Background="#4A5160" CornerRadius="3" Padding="6,1" Margin="8,0,0,2"
+                                    IsVisible="{Binding SourceDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Text="{Binding SourceDisplay}" Foreground="#E6EAF0" FontSize="11"/>
+                            </Border>
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding Summary}"
                                        Foreground="#F2F2F2" TextWrapping="Wrap" MaxWidth="680"
                                        MaxHeight="40"/>
-                            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding LocationSummary}"
+                            <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Text="{Binding LocationSummary}"
                                        Foreground="#B9C0CA" FontSize="12" Margin="0,4,0,0"/>
                         </Grid>
                     </Border>
@@ -81,11 +85,21 @@
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" DockPanel.Dock="Top" Name="Toolbar"/>
         <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
             <TextBlock VerticalAlignment="Center" Margin="5,2" Text="{Binding LoadedProject.Location}"/>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6" Margin="8,2">
+            <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="8,2">
                 <TextBlock Text="{Binding BuildStatus}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding BuildSubTask}" IsVisible="{Binding HasBuildSubTask}"
+                           FontSize="11" Opacity="0.75" MaxWidth="360" TextTrimming="CharacterEllipsis"/>
             </StackPanel>
-            <ProgressBar Grid.Column="2" Width="130" Height="10" Margin="8,2"
-                         IsVisible="{Binding IsBuilding}" IsIndeterminate="{Binding IsBuilding}"/>
+            <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" Spacing="3" Margin="8,2"
+                        IsVisible="{Binding IsBuilding}">
+                <ProgressBar Width="130" Height="10" MinWidth="0" Minimum="0" Maximum="100"
+                             Value="{Binding BuildProgress}" IsIndeterminate="{Binding IsBuildProgressIndeterminate}"
+                             ToolTip.Tip="{Binding BuildStatus}"/>
+                <ProgressBar Width="130" Height="4" MinWidth="0" MinHeight="0" Minimum="0" Maximum="100" Opacity="0.75"
+                             IsVisible="{Binding HasBuildSubTask}"
+                             Value="{Binding BuildSubProgress}" IsIndeterminate="{Binding IsBuildSubProgressIndeterminate}"
+                             ToolTip.Tip="{Binding BuildSubTask}"/>
+            </StackPanel>
             <Button Name="WarningBadge" Grid.Column="3" Padding="8,2"
                     Click="WarningBadge_Click" IsEnabled="{Binding HasWarnings}">
                 <StackPanel Orientation="Horizontal" Spacing="4">

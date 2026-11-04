@@ -37,11 +37,19 @@ namespace TypeDitor.ViewModel
         public string ColumnDisplay { get; }
         public string Message { get; }
         public bool CanOpen => !string.IsNullOrWhiteSpace(File);
+        public string Source { get; }
+        public bool IsModuleIssue { get; }
+        public string SourceDisplay { get; }
 
         public BuildIssueDisplay(BuildIssue issue)
         {
             Severity = issue.Severity?.ToUpperInvariant() ?? "ISSUE";
             Code = issue.Code;
+            Source = issue.Source;
+            IsModuleIssue = issue.IsModuleIssue;
+            SourceDisplay = string.IsNullOrEmpty(issue.Source)
+                ? string.Empty
+                : issue.IsModuleIssue ? $"Module: {issue.Source}" : $"Game: {issue.Source}";
             Message = issue.Message;
             Summary = string.IsNullOrWhiteSpace(Message)
                 ? "No message provided"
@@ -108,6 +116,9 @@ namespace TypeDitor.ViewModel
             {
                 _isBuilding = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsBuildProgressIndeterminate));
+                OnPropertyChanged(nameof(HasBuildSubTask));
+                OnPropertyChanged(nameof(IsBuildSubProgressIndeterminate));
             }
         }
 
@@ -130,6 +141,44 @@ namespace TypeDitor.ViewModel
                 OnPropertyChanged();
             }
         }
+
+        private double _buildProgress;
+        public double BuildProgress
+        {
+            get => _buildProgress;
+            private set { _buildProgress = value; OnPropertyChanged(); }
+        }
+
+        private bool _isBuildProgressKnown;
+        public bool IsBuildProgressKnown
+        {
+            get => _isBuildProgressKnown;
+            private set { _isBuildProgressKnown = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsBuildProgressIndeterminate)); }
+        }
+        public bool IsBuildProgressIndeterminate => IsBuilding && !IsBuildProgressKnown;
+
+        private string _buildSubTask;
+        public string BuildSubTask
+        {
+            get => _buildSubTask;
+            private set { _buildSubTask = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasBuildSubTask)); OnPropertyChanged(nameof(IsBuildSubProgressIndeterminate)); }
+        }
+        public bool HasBuildSubTask => IsBuilding && !string.IsNullOrEmpty(BuildSubTask);
+
+        private double _buildSubProgress;
+        public double BuildSubProgress
+        {
+            get => _buildSubProgress;
+            private set { _buildSubProgress = value; OnPropertyChanged(); }
+        }
+
+        private bool _isBuildSubProgressKnown;
+        public bool IsBuildSubProgressKnown
+        {
+            get => _isBuildSubProgressKnown;
+            private set { _isBuildSubProgressKnown = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsBuildSubProgressIndeterminate)); }
+        }
+        public bool IsBuildSubProgressIndeterminate => HasBuildSubTask && !IsBuildSubProgressKnown;
 
         public int WarningCount => BuildWarnings.Count;
         public bool HasWarnings => WarningCount > 0;
@@ -553,6 +602,11 @@ namespace TypeDitor.ViewModel
             {
                 IsBuilding = hook.IsBuilding;
                 BuildStatus = hook.Status;
+                BuildProgress = hook.Progress ?? 0;
+                IsBuildProgressKnown = hook.Progress.HasValue;
+                BuildSubTask = hook.IsBuilding ? hook.SubTask : null;
+                BuildSubProgress = hook.SubProgress ?? 0;
+                IsBuildSubProgressKnown = hook.SubProgress.HasValue;
                 if (hook.IsBuilding)
                     IsBuildFailed = false;
                 if (hook.IsComplete)
@@ -560,8 +614,8 @@ namespace TypeDitor.ViewModel
                     IsBuildFailed = !hook.Succeeded;
                     BuildWarnings = hook.Warnings;
                     BuildErrors = hook.Errors;
-                    WarningIssues = BuildWarnings.ConvertAll(issue => new BuildIssueDisplay(issue));
-                    ErrorIssues = BuildErrors.ConvertAll(issue => new BuildIssueDisplay(issue));
+                    WarningIssues = ToDisplays(BuildWarnings);
+                    ErrorIssues = ToDisplays(BuildErrors);
                     OnPropertyChanged(nameof(WarningCount));
                     OnPropertyChanged(nameof(HasWarnings));
                     OnPropertyChanged(nameof(ErrorCount));
@@ -569,6 +623,16 @@ namespace TypeDitor.ViewModel
                     OnPropertyChanged(nameof(ErrorIssueItems));
                 }
             });
+        }
+
+        // The game project's issues are listed first, followed by the issues of each module
+        private static List<BuildIssueDisplay> ToDisplays(List<BuildIssue> issues)
+        {
+            var displays = issues.ConvertAll(issue => new BuildIssueDisplay(issue));
+            displays.Sort((a, b) => a.IsModuleIssue != b.IsModuleIssue
+                ? a.IsModuleIssue.CompareTo(b.IsModuleIssue)
+                : string.Compare(a.Source, b.Source, StringComparison.OrdinalIgnoreCase));
+            return displays;
         }
     }
 }
