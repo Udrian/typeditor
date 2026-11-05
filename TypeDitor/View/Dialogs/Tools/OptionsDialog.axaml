@@ -1,80 +1,99 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:TypeDitor.ViewModel.Dialogs.Tools"
-        mc:Ignorable="d"
         x:Class="TypeDitor.View.Dialogs.Tools.OptionsDialog"
         x:DataType="vm:OptionsDialogViewModel"
-        Title="Options"
-        Height="600" Width="900"
-        MinHeight="450" MinWidth="700">
-    <Grid ColumnDefinitions="230,*">
-        <Border Grid.Column="0" BorderBrush="#808080" BorderThickness="0,0,1,0" Padding="10">
-            <DockPanel>
-                <Button DockPanel.Dock="Top" Content="All settings"
-                        Click="AllSettings_Click" Margin="0,0,0,8"/>
-                <TreeView ItemsSource="{Binding Categories}"
-                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
-                    <TreeView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" Margin="4"/>
-                        </DataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
-            </DockPanel>
+        Title="Options" Height="680" Width="1040" MinHeight="450" MinWidth="760">
+    <Window.Styles>
+        <Style Selector="Border.setting-row:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+        </Style>
+    </Window.Styles>
+    <Grid RowDefinitions="Auto,*">
+        <Border Padding="20,16" BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <Grid ColumnDefinitions="210,*">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Options" FontSize="22" FontWeight="SemiBold"/>
+                    <TextBlock Text="Make the editor yours" Opacity="0.65" FontSize="12" Margin="0,3,0,0"/>
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding FilterText, Mode=TwoWay}"
+                         PlaceholderText="Filter settings and shortcuts..." VerticalAlignment="Center"/>
+            </Grid>
         </Border>
-
-        <DockPanel Grid.Column="1" Margin="16">
-            <TextBlock DockPanel.Dock="Top" Text="{Binding ShortcutError}"
-                       Foreground="#D32F2F" TextWrapping="Wrap" Margin="0,0,0,8"/>
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding DisplayedCategories}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,14">
-                                <TextBlock Text="{Binding Name}" FontSize="18"
-                                           FontWeight="Bold" Margin="0,0,0,8"/>
-                                <ItemsControl ItemsSource="{Binding Options}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border BorderBrush="#707070" BorderThickness="0,0,0,1"
-                                                    Padding="4,8">
-                                                <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
-                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
-                                                    <TextBlock Grid.Row="1" Text="{Binding Description}"
-                                                               Margin="0,3,12,0" TextWrapping="Wrap"
-                                                               Foreground="#777777"/>
-                                                    <TextBox Grid.Column="1" Grid.RowSpan="2"
-                                                             Name="ValueBox" Text="{Binding Value, Mode=OneWay}"
-                                                             IsVisible="{Binding IsShortcut}" IsReadOnly="True"
-                                                             PlaceholderText="Press a key combination"
-                                                             MinWidth="220" VerticalAlignment="Center"
-                                                             KeyDown="ValueBox_KeyDown"/>
-                                                    <ContentControl Grid.Column="1" Grid.RowSpan="2"
-                                                                    Content="{Binding Editor}"
-                                                                    ContentTemplate="{Binding EditorTemplate}"
-                                                                    IsVisible="{Binding !IsShortcut}"
-                                                                    MinWidth="220" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="2" Grid.RowSpan="2"
-                                                            Content="Revert" IsEnabled="{Binding CanRevert}"
-                                                            Click="Revert_Click" Margin="8,0,0,0"
-                                                            VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
-                                                               Text="Focus the field and press the desired shortcut. Backspace or Delete clears it."
-                                                               IsVisible="{Binding IsShortcut}" FontSize="11"
-                                                               Foreground="#777777" Margin="4,4,0,0"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <Border Height="1" Background="#505050" Margin="0,12,0,0"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </DockPanel>
+        <Grid Grid.Row="1" ColumnDefinitions="210,*">
+            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="0,0,1,0" Padding="12">
+                <DockPanel>
+                    <Button DockPanel.Dock="Top" Content="All settings" HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left" Click="AllSettings_Click" Margin="0,0,0,12"/>
+                    <TreeView ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
+                        <TreeView.ItemTemplate>
+                            <DataTemplate><TextBlock Text="{Binding Name}" Margin="4,7"/></DataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </DockPanel>
+            </Border>
+            <DockPanel Grid.Column="1" Margin="20,16">
+                <TextBlock DockPanel.Dock="Top" Text="{Binding ShortcutError}" Foreground="#D32F2F"
+                           TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <TextBlock DockPanel.Dock="Top" Text="Right-click a setting to manage its project default."
+                           FontSize="12" Opacity="0.65" Margin="0,0,0,16"/>
+                <TextBlock DockPanel.Dock="Top" Text="No settings match your filter." IsVisible="{Binding NoResults}"
+                           HorizontalAlignment="Center" Margin="0,24"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding DisplayedCategories}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,24">
+                                    <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" Margin="2,0,0,10"/>
+                                    <Border CornerRadius="8" BorderThickness="1" Padding="6"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                        <ItemsControl ItemsSource="{Binding VisibleOptions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Classes="setting-row" Padding="12,14" CornerRadius="5"
+                                                            Background="Transparent">
+                                                        <Border.ContextMenu>
+                                                            <ContextMenu>
+                                                                <MenuItem Header="Set as project default" Click="SetProjectDefault_Click"
+                                                                          IsEnabled="{Binding CanSetProjectDefault}"/>
+                                                                <MenuItem Header="Remove project default" Click="RemoveProjectDefault_Click"
+                                                                          IsVisible="{Binding HasProjectDefault}"/>
+                                                            </ContextMenu>
+                                                        </Border.ContextMenu>
+                                                        <Grid ColumnDefinitions="*,230,Auto" RowDefinitions="Auto,Auto,Auto">
+                                                            <StackPanel Spacing="4" Margin="0,0,16,0">
+                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                                <TextBlock Text="{Binding Description}" Opacity="0.65" FontSize="12" TextWrapping="Wrap"/>
+                                                            </StackPanel>
+                                                            <TextBlock Grid.Row="1" Text="{Binding DefaultLabel}" FontSize="11"
+                                                                       Opacity="0.55" Margin="0,6,0,0"/>
+                                                            <TextBox Grid.Column="1" Grid.RowSpan="2" Text="{Binding Value, Mode=OneWay}"
+                                                                     IsVisible="{Binding IsShortcut}" IsReadOnly="True"
+                                                                     PlaceholderText="Press a key combination" VerticalAlignment="Center"
+                                                                     KeyDown="ValueBox_KeyDown"/>
+                                                            <ContentControl Grid.Column="1" Grid.RowSpan="2" Content="{Binding Editor}"
+                                                                            ContentTemplate="{Binding EditorTemplate}"
+                                                                            IsVisible="{Binding !IsShortcut}" VerticalAlignment="Center"/>
+                                                            <Button Grid.Column="2" Grid.RowSpan="2" Content="Revert"
+                                                                    IsEnabled="{Binding CanRevert}" Click="Revert_Click"
+                                                                    Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Margin="0,8,0,0"
+                                                                       Text="Press a key combination to change it. Backspace or Delete clears it."
+                                                                       IsVisible="{Binding IsShortcut}" FontSize="11" Opacity="0.55"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
     </Grid>
 </Window>

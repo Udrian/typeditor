@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using System;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using TypeD.Models.Data;
@@ -33,6 +34,30 @@ namespace TypeDitor.View.Dialogs.Tools
         {
             if (sender is Button { DataContext: OptionsDialogViewModel.Option option })
                 option.Revert();
+        }
+
+        private async void SetProjectDefault_Click(object sender, RoutedEventArgs e) =>
+            await ChangeProjectDefault(sender, false);
+
+        private async void RemoveProjectDefault_Click(object sender, RoutedEventArgs e) =>
+            await ChangeProjectDefault(sender, true);
+
+        private async System.Threading.Tasks.Task ChangeProjectDefault(object sender, bool remove)
+        {
+            if (sender is not MenuItem { DataContext: OptionsDialogViewModel.Option option })
+                return;
+            try
+            {
+                await option.SetProjectDefaultAsync(remove);
+            }
+            catch (Exception exception) when (exception is System.IO.IOException or UnauthorizedAccessException or
+                System.Text.Json.JsonException or InvalidOperationException or NotSupportedException)
+            {
+                TypeD.ViewModel.ViewModelBase.ResourceModel.Get<TypeD.Models.Interfaces.ILogModel>()
+                    .Log($"Could not save project default: {exception}");
+                await MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard("Project default", exception.Message,
+                    MsBox.Avalonia.Enums.ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+            }
         }
 
         private void ValueBox_KeyDown(object sender, KeyEventArgs e)

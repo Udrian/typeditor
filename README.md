@@ -36,7 +36,24 @@ Run node clipboard regression tests with
 Ordinary settings use the same registered property editors as the Properties
 panel, selected by the declared `ISetting` value type (even for null values).
 Edits pass typed values to the setting's save callback. Revert restores the
-default value and refreshes the editor.
+inherited default value and refreshes the editor.
+
+Use the filter at the top to search setting names, descriptions, categories,
+command IDs, or shortcut bindings. Category selection narrows the search.
+
+Right-click a setting or shortcut and choose **Set as project default** to save
+only that setting (or individual command binding) in the project's
+`TypeO/Settings/<Context>.json`. This is saved immediately and can be shared with
+the project. User settings still take precedence. **Revert** clears the user's
+override and restores the project default, falling back to the system or
+built-in default when no project default exists.
+
+Settings with a project default show a **Project default** label and a
+**Remove project default** context-menu action. Removing one preserves user
+overrides and other project settings; an inherited value updates immediately.
+Project-default actions require an open project. Existing setting files remain
+readable; newly edited scopes track explicit setting names so even a value
+equal to the built-in default can override a project value.
 
 **Viewer > Viewer Clear Color** changes the editor scene's background immediately
 and is saved in the Viewer settings context. Revert restores the original purple
