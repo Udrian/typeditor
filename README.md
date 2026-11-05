@@ -1,5 +1,36 @@
 # typeditor
 
+## Copying nodes
+
+With the Component Explorer or Viewer focused:
+
+- **Ctrl+D** duplicates the selected node as a sibling immediately after it.
+- **Ctrl+C** copies the node, its properties, and its complete child hierarchy
+  to the system clipboard as a snapshot.
+- **Ctrl+V** pastes a new instance under the selected node in Component Explorer.
+  In the Viewer it pastes under the hovered node, or the opened component root
+  when the pointer is over empty space. In the Viewer,
+  a writable `Vec2 Position` is placed at the current mouse world position,
+  relative to the parent. Other nodes retain their copied position.
+
+Duplicate and Paste support undo/redo. Each inserted root gets a fresh ID;
+inherited child identities and nested property overrides are preserved.
+Text fields retain their normal editing shortcuts. These command shortcuts can
+be customized in Options.
+Copy, Paste, and Duplicate are also available in the Command Palette when their
+target is valid. The palette captures the selection and viewer paste location
+before its search field takes focus.
+
+Right-click a node in the Viewer for Duplicate, Copy, and Paste. Right-click
+empty viewer space for Paste; the menu also offers Open Component and, when a
+component is open, Close. Paste is disabled when the system clipboard contains
+no compatible node. Clipboard snapshots require the same component/module format
+versions and available component types in the destination project; copy again
+after a format upgrade.
+
+Run node clipboard regression tests with
+`dotnet test TypeDitorTest\TypeDitorTest.csproj --filter FullyQualifiedName~NodeClipboardTests`.
+
 ## Options
 
 Ordinary settings use the same registered property editors as the Properties

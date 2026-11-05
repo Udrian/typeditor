@@ -42,7 +42,7 @@ namespace TypeDitor.View
             var textBoxFocused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox;
             if (textBoxFocused
                 && e.KeyModifiers == KeyModifiers.Control
-                && e.Key is Key.A or Key.C or Key.V or Key.X or Key.Z or Key.Y)
+                && e.Key is Key.A or Key.C or Key.D or Key.V or Key.X or Key.Z or Key.Y)
                 return;
             // Navigation and editing keys without Ctrl/Alt/Meta (Home, End, Delete, ...) belong to the text box.
             if (textBoxFocused

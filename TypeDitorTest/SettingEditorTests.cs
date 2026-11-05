@@ -2,6 +2,7 @@ using Avalonia;
 using System.Reflection;
 using System.Text.Json;
 using TypeD.Models.Data;
+using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
 using TypeD.View;
 using TypeD.ViewModel;
@@ -30,6 +31,60 @@ public class SettingEditorTests
         Verify(new EnumPropertyDefinition(), DayOfWeek.Monday, DayOfWeek.Friday, typeof(EnumPropertyNode));
         Verify(new ColorPropertyDefinition(), new Color(255, 0, 0, 0), new Color(255, 1, 2, 3), typeof(ColorPropertyNode));
         Verify(new Vec2PropertyDefinition(), new Vec2(1, 2), new Vec2(3, 4), typeof(Vec2PropertyNode));
+    }
+
+    [Fact]
+    public void DisabledMenuDefinitionsProduceDisabledAvaloniaItems()
+    {
+        var menu = new Avalonia.Controls.ContextMenu();
+        TypeD.Helpers.ViewHelper.InitMenu(menu,
+            new MenuItem("Paste", _ => { }) { IsEnabled = false }, null);
+        Assert.False(Assert.IsType<Avalonia.Controls.MenuItem>(Assert.Single(menu.Items)).IsEnabled);
+    }
+
+    [Theory]
+    [InlineData("node.copy")]
+    [InlineData("node.paste")]
+    [InlineData("node.duplicate")]
+    public void PaletteFiltersAndExecutesWithCapturedCommandParameters(string id)
+    {
+        var target = new object();
+        var constructor = typeof(EditorCommand).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
+        var command = (EditorCommand)constructor.Invoke(new object[]
+        {
+            id, id, "Node command", "global", "Ctrl+C",
+            (Action<object>)(_ => { }), (Predicate<object>)(parameter => ReferenceEquals(parameter, target)),
+            (Func<object>)(() => null), null
+        });
+        object executedTarget = null;
+        var registry = NodeClipboardTests.Stub.Create<IEditorCommandRegistry>((method, args) =>
+        {
+            if (method.Name == "get_Commands")
+                return new[] { command };
+            if (method.Name == "Execute")
+            {
+                Assert.Equal(id, args[0]);
+                executedTarget = args[1];
+                return true;
+            }
+            throw new InvalidOperationException(method.Name);
+        });
+        var hooks = NodeClipboardTests.Stub.Create<IHookModel>((method, args) =>
+        {
+            Assert.Equal("Shoot", method.Name);
+            var context = Assert.IsType<CommandPaletteContextHook>(args[0]);
+            context.Parameters[id] = target;
+            return context;
+        });
+        var palette = new TypeDitor.View.CommandPaletteWindow(registry, hooks);
+        var refresh = palette.GetType().GetMethod("RefreshCommands", BindingFlags.Instance | BindingFlags.NonPublic);
+        refresh.Invoke(palette, null);
+        Assert.Same(command, Assert.Single(palette.FilteredCommands));
+
+        palette.GetType().GetMethod("ExecuteCommand", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(palette, new object[] { command });
+
+        Assert.Same(target, executedTarget);
     }
 
     [Fact]

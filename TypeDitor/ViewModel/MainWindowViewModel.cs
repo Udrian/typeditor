@@ -548,7 +548,7 @@ namespace TypeDitor.ViewModel
 
         public void OpenCommandPalette()
         {
-            var palette = new CommandPaletteWindow(EditorCommandRegistry);
+            var palette = new CommandPaletteWindow(EditorCommandRegistry, ResourceModel.Get<IHookModel>());
             palette.Show(MainWindow);
         }
 

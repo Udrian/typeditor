@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using System.Collections.ObjectModel;
 using System.Linq;
 using TypeD.Models.Data;
+using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
 
 namespace TypeDitor.View
@@ -11,12 +12,14 @@ namespace TypeDitor.View
     public partial class CommandPaletteWindow : Window
     {
         private readonly IEditorCommandRegistry CommandRegistry;
+        private readonly CommandPaletteContextHook Context;
         public ObservableCollection<EditorCommand> FilteredCommands { get; } = new();
 
-        public CommandPaletteWindow(IEditorCommandRegistry commandRegistry)
+        public CommandPaletteWindow(IEditorCommandRegistry commandRegistry, IHookModel hookModel)
         {
-            InitializeComponent();
             CommandRegistry = commandRegistry;
+            Context = hookModel.Shoot(new CommandPaletteContextHook());
+            InitializeComponent();
             DataContext = this;
             Opened += (_, _) =>
             {
@@ -35,7 +38,7 @@ namespace TypeDitor.View
         {
             var search = SearchBox?.Text?.Trim();
             var commands = CommandRegistry.Commands
-                .Where(command => command.CanExecute())
+                .Where(command => command.CanExecute(GetParameter(command)))
                 .Where(command => string.IsNullOrEmpty(search) ||
                     command.Name.Contains(search, System.StringComparison.OrdinalIgnoreCase) ||
                     command.Description.Contains(search, System.StringComparison.OrdinalIgnoreCase) ||
@@ -54,9 +57,12 @@ namespace TypeDitor.View
 
         private void ExecuteCommand(EditorCommand command)
         {
-            CommandRegistry.Execute(command.Id);
+            CommandRegistry.Execute(command.Id, GetParameter(command));
             Close();
         }
+
+        private object GetParameter(EditorCommand command) =>
+            Context.Parameters.TryGetValue(command.Id, out var parameter) ? parameter : null;
 
         private void Command_Click(object sender, RoutedEventArgs e)
         {
