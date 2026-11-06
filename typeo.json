@@ -22,7 +22,38 @@
     {
       "Name": "TypeDitor",
       "type": "",
-      "depends_on": []
+      "depends_on": [],
+      "propertyGroup": {
+        "Nullable": "disable",
+        "GenerateDocumentationFile": "false",
+        "OutputType": "WinExe",
+        "Authors": "Simon Blixt Haggren",
+        "Company": "Typedeaf",
+        "Product": "TypeO",
+        "ApplicationManifest": "app.manifest",
+        "ApplicationIcon": "Branding\\DefaultIcon.ico",
+        "AvaloniaUseCompiledBindingsByDefault": "false"
+      },
+      "packageReferences": {},
+      "itemGroups": [
+        {
+          "items": [
+            {
+              "name": "AvaloniaResource",
+              "include": "Icons\\**"
+            },
+            {
+              "name": "AvaloniaResource",
+              "include": "Branding\\**"
+            },
+            {
+              "name": "Content",
+              "include": "DefaultIcons\\**",
+              "copyToOutputDirectory": "PreserveNewest"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
