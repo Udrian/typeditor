@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "externals": [],
   "dependencies": [
-    "TypeD-0.1.0",
+    "Udrian@TypeD-0.1.0.dev",
     "Avalonia-12.1.4;nuget",
     "Avalonia.Controls.ColorPicker-12.1.4;nuget",
     "Avalonia.Desktop-12.1.4;nuget",
