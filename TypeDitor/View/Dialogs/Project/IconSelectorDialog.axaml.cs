@@ -5,7 +5,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using TypeD.Models.Interfaces;
 using TypeD.ViewModel;
-using TypeDCore.Models;
+using TypeD.Models;
 
 namespace TypeDitor.View.Dialogs.Project
 {

@@ -6,9 +6,7 @@ using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
 using TypeD.ViewModel;
-using TypeDCore.Commands;
-using TypeDCore.Commands.Data;
-using TypeDCore.Models;
+using TypeD.Models;
 
 namespace TypeDitor.ViewModel.Panels
 {
@@ -503,7 +501,7 @@ namespace TypeDitor.ViewModel.Panels
 
         public bool CanDrop(IReadOnlyList<Component> nodes, Component target, MovePosition position)
         {
-            return nodes.Any(node => ComponentMoveCommand.TryResolve(node, target, position, out _, out _));
+            return nodes.Any(node => ComponentMoveRules.TryResolve(node, target, position, out _, out _));
         }
 
         public bool CommitRename(Node node)

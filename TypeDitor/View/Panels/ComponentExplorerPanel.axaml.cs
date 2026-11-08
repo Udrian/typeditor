@@ -7,7 +7,6 @@ using Avalonia.VisualTree;
 using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
-using TypeDCore.Commands.Data;
 using TypeDitor.ViewModel.Panels;
 
 namespace TypeDitor.View.Panels

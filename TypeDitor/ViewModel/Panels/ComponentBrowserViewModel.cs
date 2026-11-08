@@ -1,15 +1,16 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
-using TypeDCore.Models;
+using TypeD.Models;
 using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
 using TypeD.ViewModel;
-using TypeDCore.Commands.Data;
 
 namespace TypeDitor.ViewModel.Panels
 {

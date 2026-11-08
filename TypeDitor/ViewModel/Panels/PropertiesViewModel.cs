@@ -8,7 +8,6 @@ using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
 using TypeD.ViewModel;
-using TypeDCore.Commands.Data;
 using TypeDitor.View.Panels;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;

@@ -2,20 +2,23 @@
 
 ## UI ownership
 
-TypeDitor owns the editor panels, project dialogs, camera toolbar, property
-templates, and their view models. Their namespaces follow
-`TypeDitor.View.*` and `TypeDitor.ViewModel.*`; property templates use
-`avares://TypeDitor/View/Panels/PropertyTemplates/` resource paths.
+TypeDitor builds with TypeD as its only project reference. It owns the generic
+component browser/explorer, Properties, Command History, Output, camera toolbar,
+component/icon/content pickers, rename/move-target dialogs, and primitive
+property templates. These use TypeD contracts rather than engine types.
 
-TypeDCore retains the engine-backed viewers and ConsoleViewModel, engine
-integration, and component operations. Core commands use TypeD's
-`IEditorDialogModel` contract rather than referencing editor windows, so
-TypeDCore does not require a project reference to TypeDitor. TypeDitor registers
-the dialog service and panels before initializing its dock layout and removes
-them when the owning window closes. Existing panel IDs are preserved.
+TypeDCore owns entity/scene/drawable creation, custom-property and content-reference
+dialogs, the engine Viewer and Content panels, and their view models. Color,
+Vec2, and engine-content templates are resources of TypeDCore, not TypeDitor.
+Module initialization attaches the engine panels; unloading removes them.
+Existing panel IDs are preserved.
 
-Run the browser and property-template migration checks with
-`dotnet test TypeDitorTest/TypeDitorTest.csproj --filter FullyQualifiedName~ComponentBrowserTests`.
+TypeDitor's generic dialog service raises TypeD's `CreateComponentDialogHook`
+and `AddCustomPropertyDialogHook`. A loaded core module supplies those dialogs
+and their asynchronous results. Without a provider, the request returns no
+result. Neither project requires a reference to the other.
+
+Build the standalone editor solution with `dotnet build TypeDitor.slnx`.
 
 ## Copying nodes
 

@@ -429,11 +429,9 @@ namespace TypeDitor.ViewModel
         public void InitUI(MainWindow mainWindow)
         {
             ResourceModel.Add(EditorDialogs);
-            PanelModel.AttachPanel("typed_viewer", "Viewer", new ViewerPanel(LoadedProject), Alignment.Unset);
             PanelModel.AttachPanel("typed_properties", "Properties", new PropertiesPanel(LoadedProject), Alignment.Right);
             PanelModel.AttachPanel("typed_commandhistory", "Command History", new CommandHistoryPanel(), Alignment.Right);
             PanelModel.AttachPanel("typed_componentexplorer", "Component Explorer", new ComponentExplorerPanel(LoadedProject), Alignment.Left);
-            PanelModel.AttachPanel("typed_content", "Content", new ContentPanel(LoadedProject), Alignment.Bottom);
             PanelModel.AttachPanel("typed_output", "Output", new OutputPanel(), Alignment.Bottom);
             PanelModel.AttachPanel("typed_componentbrowser", "Component Browser", new ComponentBrowserPanel(LoadedProject), Alignment.Left);
             var dockLayoutSetting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);

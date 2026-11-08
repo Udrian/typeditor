@@ -1,12 +1,9 @@
-using Avalonia.Controls;
 using TypeD.Helpers;
 using TypeD.Models.Data;
+using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
 using TypeD.ViewModel;
 using TypeDitor.View.Dialogs.Project;
-using TypeDitor.ViewModel.Dialogs.Project;
-using TypeOEngine.Typedeaf.Core.Entities;
-using TypeOEngine.Typedeaf.Core.Entities.Drawables;
 
 namespace TypeDitor.Models
 {
@@ -53,35 +50,25 @@ namespace TypeDitor.Models
                 ? dialog.ViewModel.Name : null;
         }
 
-        public async Task<ComponentCreationOptions> CreateComponentAsync(Project project, string componentNamespace, Component baseComponent)
+        public Task<ComponentCreationOptions> CreateComponentAsync(Project project, string componentNamespace, Component baseComponent)
         {
-            Window dialog = baseComponent.FullName == typeof(Entity).FullName
-                ? new CreateEntityTypeDialog(project, componentNamespace)
-                : baseComponent.FullName == typeof(Drawable).FullName
-                    ? new CreateDrawableTypeDialog(project, componentNamespace)
-                    : new CreateSceneTypeDialog(project, componentNamespace);
-            if (await dialog.ShowDialog<bool>(ViewModelBase.MainWindow) != true)
-                return null;
-
-            var viewModel = (CreateComponentTypeBaseViewModel)dialog.DataContext;
-            var entity = viewModel as CreateEntityTypeViewModel;
-            return new ComponentCreationOptions
+            var hook = ViewModelBase.ResourceModel.Get<IHookModel>().Shoot(new CreateComponentDialogHook
             {
-                Name = viewModel.ComponentName,
-                Namespace = viewModel.ComponentNamespace,
-                ParentComponent = viewModel.ParentComponent,
-                BaseType = viewModel.ComponentBaseType,
-                Icon = viewModel.IconName,
-                Updatable = entity?.ComponentUpdatable ?? false,
-                Drawable = entity?.ComponentDrawable ?? false
-            };
+                Project = project,
+                ComponentNamespace = componentNamespace,
+                BaseComponent = baseComponent
+            });
+            return hook.Result ?? Task.FromResult<ComponentCreationOptions>(null);
         }
 
-        public async Task<(CustomProperty Property, Type Type)?> AddCustomPropertyAsync(IEnumerable<IPropertyDefinition> definitions, IEnumerable<string> takenNames)
+        public Task<(CustomProperty Property, Type Type)?> AddCustomPropertyAsync(IEnumerable<IPropertyDefinition> definitions, IEnumerable<string> takenNames)
         {
-            var dialog = new AddCustomPropertyDialog(definitions, takenNames);
-            return await dialog.ShowDialog<bool>(ViewModelBase.MainWindow) == true
-                ? (dialog.ViewModel.Build(), dialog.ViewModel.SelectedType.Type) : null;
+            var hook = ViewModelBase.ResourceModel.Get<IHookModel>().Shoot(new AddCustomPropertyDialogHook
+            {
+                Definitions = definitions,
+                TakenNames = takenNames
+            });
+            return hook.Result ?? Task.FromResult<(CustomProperty Property, Type Type)?>(null);
         }
     }
 }

@@ -4,8 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using TypeD.Models.Data;
-using TypeDCore.Commands;
-using TypeDCore.Commands.Data;
+using TypeD.Models;
 
 namespace TypeDitor.View.Dialogs.Project
 {
@@ -66,7 +65,7 @@ namespace TypeDitor.View.Dialogs.Project
             {
                 Component = component,
                 Title = (string.IsNullOrEmpty(name) ? component.ClassName : name) + (component.Removed ? " (removed)" : string.Empty),
-                IsEnabled = ComponentMoveCommand.TryResolve(nodeToMove, component, MovePosition.Child, out _, out _)
+                IsEnabled = ComponentMoveRules.TryResolve(nodeToMove, component, MovePosition.Child, out _, out _)
             };
             foreach (var child in component.Children.Where(c => c.IsVisible))
                 node.Children.Add(Build(child, nodeToMove));

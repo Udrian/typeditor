@@ -4,7 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using TypeD.Models.Data;
-using TypeDCore.Models;
+using TypeD.Models;
 using TypeDitor.ViewModel.Panels;
 
 namespace TypeDitor.View.Panels
