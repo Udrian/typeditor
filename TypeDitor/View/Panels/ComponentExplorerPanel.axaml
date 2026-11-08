@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:TypeDitor.ViewModel.Panels"
+             mc:Ignorable="d" d:DesignHeight="450" d:DesignWidth="800"
+             xmlns:local="clr-namespace:TypeDitor.View.Panels"
+             x:Class="TypeDitor.View.Panels.ComponentExplorerPanel"
+             x:DataType="vm:ComponentExplorerViewModel">
+    <DockPanel>
+    <TextBox DockPanel.Dock="Top" Text="{Binding FilterText}" PlaceholderText="Filter nodes..." Margin="2"/>
+    <TreeView Name="ComponentsTree" ItemsSource="{Binding VisibleNodes}"
+              SelectionMode="Multiple"
+              SelectedItem="{Binding SelectedNode}"
+              SelectionChanged="ComponentsTree_SelectionChanged"
+              GotFocus="ComponentsTree_GotFocus">
+        <TreeView.Styles>
+            <Style Selector="TreeViewItem">
+                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+            </Style>
+            <Style Selector="Image.removed">
+                <Setter Property="Opacity" Value="0.5"/>
+            </Style>
+            <Style Selector="TextBlock.public">
+                <Setter Property="Foreground" Value="#87CEEB"/>
+            </Style>
+            <Style Selector="TextBlock.removed">
+                <Setter Property="TextDecorations" Value="Strikethrough"/>
+                <Setter Property="Opacity" Value="0.5"/>
+            </Style>
+            <Style Selector="Border.noderow">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="BorderBrush" Value="#007ACC"/>
+            </Style>
+            <Style Selector="Border.noderow.dropbefore">
+                <Setter Property="BorderThickness" Value="0,2,0,0"/>
+            </Style>
+            <Style Selector="Border.noderow.dropafter">
+                <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            </Style>
+            <Style Selector="Border.noderow.dropchild">
+                <Setter Property="Background" Value="#66007ACC"/>
+            </Style>
+        </TreeView.Styles>
+        <TreeView.ItemTemplate>
+            <TreeDataTemplate ItemsSource="{Binding VisibleNodes}">
+                <Border Classes="noderow" Classes.dropbefore="{Binding IsDropBefore}"
+                        ToolTip.Tip="{Binding ToolTipText}"
+                        Classes.dropafter="{Binding IsDropAfter}" Classes.dropchild="{Binding IsDropChild}">
+                    <Grid ColumnDefinitions="Auto,Auto,*">
+                        <Image Grid.Column="0" Source="{Binding Icon}" Width="16" Height="16" Margin="0,0,4,0"
+                               Classes.removed="{Binding IsRemoved}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding VisibilityIcon}" IsVisible="{Binding ShowVisibilityIcon}"
+                                   Margin="0,0,4,0" FontSize="11" VerticalAlignment="Center"
+                                   Classes.public="{Binding IsPublic}" Classes.removed="{Binding IsRemoved}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Title}" IsVisible="{Binding !IsEditing}"
+                                   Classes.removed="{Binding IsRemoved}" Classes.public="{Binding IsPublic}"/>
+                        <TextBox Grid.Column="2" Text="{Binding EditName}" IsVisible="{Binding IsEditing}"
+                                 KeyDown="NodeName_KeyDown"/>
+                    </Grid>
+                </Border>
+            </TreeDataTemplate>
+        </TreeView.ItemTemplate>
+        
+        <TreeView.ContextMenu>
+            <ContextMenu Opening="ContextMenu_Opening"/>
+        </TreeView.ContextMenu>
+    </TreeView>
+    </DockPanel>
+</UserControl>

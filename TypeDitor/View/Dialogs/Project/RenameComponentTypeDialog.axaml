@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
+        xmlns:local="clr-namespace:TypeDitor.View.Dialogs.Project"
+        x:Class="TypeDitor.View.Dialogs.Project.RenameComponentTypeDialog"
+        Title="Rename component type">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="25"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="25"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Name}"/>
+        <Button Grid.Row="2" Grid.Column="1" Content="_Cancel" Height="50" Click="CancelButton_Click"/>
+        <Button Grid.Row="2" Grid.Column="2" Content="_Save" Height="50" Click="SaveButton_Click"/>
+    </Grid>
+</Window>

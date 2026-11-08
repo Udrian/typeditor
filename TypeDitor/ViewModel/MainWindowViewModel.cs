@@ -20,6 +20,9 @@ using TypeD.ViewModel;
 using TypeDitor.Commands;
 using TypeDitor.View;
 using TypeDitor.View.Dialogs.Tools;
+using TypeDitor.View.Panels;
+using TypeDitor.View.Toolbars;
+using TypeDitor.Models;
 using TypeDitor.View.TypeDock;
 
 namespace TypeDitor.ViewModel
@@ -108,6 +111,7 @@ namespace TypeDitor.ViewModel
         private bool _isBuildFailed;
         private string _buildStatus = "Build status unavailable";
         private List<IDisposable> CommandRegistrations { get; set; } = new();
+        private readonly EditorDialogModel EditorDialogs = new();
 
         public bool IsBuilding
         {
@@ -424,6 +428,14 @@ namespace TypeDitor.ViewModel
         // Functions
         public void InitUI(MainWindow mainWindow)
         {
+            ResourceModel.Add(EditorDialogs);
+            PanelModel.AttachPanel("typed_viewer", "Viewer", new ViewerPanel(LoadedProject), Alignment.Unset);
+            PanelModel.AttachPanel("typed_properties", "Properties", new PropertiesPanel(LoadedProject), Alignment.Right);
+            PanelModel.AttachPanel("typed_commandhistory", "Command History", new CommandHistoryPanel(), Alignment.Right);
+            PanelModel.AttachPanel("typed_componentexplorer", "Component Explorer", new ComponentExplorerPanel(LoadedProject), Alignment.Left);
+            PanelModel.AttachPanel("typed_content", "Content", new ContentPanel(LoadedProject), Alignment.Bottom);
+            PanelModel.AttachPanel("typed_output", "Output", new OutputPanel(), Alignment.Bottom);
+            PanelModel.AttachPanel("typed_componentbrowser", "Component Browser", new ComponentBrowserPanel(LoadedProject), Alignment.Left);
             var dockLayoutSetting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
             var savedDockLayout = dockLayoutSetting.DockLayout.Value;
             IRootDock layout;
@@ -458,6 +470,12 @@ namespace TypeDitor.ViewModel
             DockFactory.DockableUnpinned += (_, _) => SaveDockLayout();
 
             var initUIHook = HookModel.Shoot(new InitUIHook(LoadedProject));
+
+            initUIHook.Toolbar.Add("Camera Control", new TypeD.View.ToolbarItem
+            {
+                Name = "Camera Control",
+                CreateControl = () => new CameraToolbar(ResourceModel)
+            });
 
             var menu = initUIHook.Menu;
             var viewMenuItem = new TypeD.View.MenuItem()

@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TypeDitor.ViewModel.Dialogs.Project"
+        mc:Ignorable="d"
+        xmlns:local="clr-namespace:TypeDitor.View.Dialogs.Project"
+        x:Class="TypeDitor.View.Dialogs.Project.ComponentSelectorDialog"
+        x:DataType="vm:ComponentSelectorViewModel"
+        Title="Select Component"
+        Width="800" Height="450">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <ListBox x:Name="lbComponents" Grid.Row="0" ItemsSource="{Binding FilteredComponents}" DoubleTapped="lbComponents_MouseDoubleClick">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="{Binding FullName}" Grid.Row="0" Margin="20,0,0,0" HorizontalAlignment="Left" FontWeight="Bold" />
+                        <TextBlock Text="{Binding TypeOBaseType}" Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" FontSize="10" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBox x:Name="tbFilter" Grid.Row="1" TextChanged="tbFilter_TextChanged" />
+    </Grid>
+</Window>

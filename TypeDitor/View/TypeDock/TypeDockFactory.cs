@@ -235,7 +235,7 @@ namespace TypeDitor.View.TypeDock
                 if (e.Property.Name == nameof(Tool.IsOpen))
                 {
                     var panels = PanelModel.GetPanels();
-                    if (panels.First(p => p.ID == panel.ID).Open != (bool)e.NewValue)
+                    if (panels.FirstOrDefault(p => p.ID == panel.ID)?.Open != (bool)e.NewValue)
                         PanelModel.SetPanelStatusWithoutNotify(panel.ID, (bool)e.NewValue);
                 }
             };

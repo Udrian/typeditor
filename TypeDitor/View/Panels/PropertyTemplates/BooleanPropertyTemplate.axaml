@@ -1,0 +1,8 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DataTemplate x:Key="BooleanPropertyTemplate">
+        <CheckBox IsChecked="{Binding Value}" IsHitTestVisible="{Binding !ReadOnly}" Focusable="{Binding !ReadOnly}"
+                  VerticalAlignment="Center"
+                  Margin="8,4"/>
+    </DataTemplate>
+</ResourceDictionary>

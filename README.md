@@ -1,5 +1,22 @@
 # typeditor
 
+## UI ownership
+
+TypeDitor owns the editor panels, project dialogs, camera toolbar, property
+templates, and their view models. Their namespaces follow
+`TypeDitor.View.*` and `TypeDitor.ViewModel.*`; property templates use
+`avares://TypeDitor/View/Panels/PropertyTemplates/` resource paths.
+
+TypeDCore retains the engine-backed viewers and ConsoleViewModel, engine
+integration, and component operations. Core commands use TypeD's
+`IEditorDialogModel` contract rather than referencing editor windows, so
+TypeDCore does not require a project reference to TypeDitor. TypeDitor registers
+the dialog service and panels before initializing its dock layout and removes
+them when the owning window closes. Existing panel IDs are preserved.
+
+Run the browser and property-template migration checks with
+`dotnet test TypeDitorTest/TypeDitorTest.csproj --filter FullyQualifiedName~ComponentBrowserTests`.
+
 ## Copying nodes
 
 With the Component Explorer or Viewer focused:
@@ -28,8 +45,14 @@ no compatible node. Clipboard snapshots require the same component/module format
 versions and available component types in the destination project; copy again
 after a format upgrade.
 
-Run node clipboard regression tests with
-`dotnet test TypeDitorTest\TypeDitorTest.csproj --filter FullyQualifiedName~NodeClipboardTests`.
+Selection, clipboard, and viewer-camera services now come from TypeD, not
+TypeDCore. Clipboard command data uses TypeD's engine-independent world
+coordinates; the core module still handles positioning engine nodes.
+
+Run node clipboard snapshot checks with
+`dotnet test ../typed/TypeDTest/TypeDTest.csproj --filter FullyQualifiedName~NodeClipboardModel`.
+Run engine paste-position checks with
+`dotnet test ../typeocore/TypeOCoreTest/TypeOCoreTest.csproj --filter FullyQualifiedName~ClipboardPosition`.
 
 ## Options
 

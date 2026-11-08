@@ -1,0 +1,10 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DataTemplate x:Key="ColorPropertyTemplate">
+        <ColorPicker Color="{Binding AvaloniaColor, Mode=TwoWay}"
+                        IsAlphaEnabled="True"
+                        IsEnabled="{Binding !ReadOnly}"
+                        Classes="PropertyInput"
+                        HorizontalAlignment="Left"/>
+    </DataTemplate>
+</ResourceDictionary>

@@ -1,0 +1,16 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:pd="clr-namespace:TypeDCore.Models.Data.PropertyDefinitions;assembly=TypeDCore">
+    <DataTemplate x:Key="ContentPropertyTemplate">
+        <Grid ColumnDefinitions="*,Auto,Auto" Background="Transparent" pd:ContentDropBehavior.Enabled="True">
+            <TextBox Text="{Binding Value, Mode=OneWay}" IsReadOnly="True"
+                     Classes="PropertyInput"/>
+            <Button Grid.Column="1" Content="..." Command="{Binding BrowseCommand}"
+                    IsEnabled="{Binding !ReadOnly}" Padding="8,0" MinHeight="0"
+                    VerticalAlignment="Stretch" ToolTip.Tip="Select content"/>
+            <Button Grid.Column="2" Content="X" Command="{Binding ClearCommand}"
+                    IsEnabled="{Binding !ReadOnly}" Padding="8,0" MinHeight="0"
+                    VerticalAlignment="Stretch" ToolTip.Tip="Clear content"/>
+        </Grid>
+    </DataTemplate>
+</ResourceDictionary>

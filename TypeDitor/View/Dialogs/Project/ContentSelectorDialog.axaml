@@ -1,0 +1,29 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TypeDitor.View.Dialogs.Project.ContentSelectorDialog"
+        Title="Select Content"
+        WindowStartupLocation="CenterOwner"
+        Width="800" Height="520">
+    <Grid RowDefinitions="Auto, *" Margin="8">
+        <TextBox x:Name="tbFilter" PlaceholderText="Search..." TextChanged="tbFilter_TextChanged"/>
+
+        <ListBox x:Name="lbContent" Grid.Row="1" Margin="0,8,0,0"
+                 ItemsSource="{Binding FilteredItems}"
+                 DoubleTapped="lbContent_DoubleTapped">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Width="140" Height="130">
+                        <Image Source="{Binding Thumbnail}" Stretch="Uniform" Height="100"/>
+                        <TextBlock Text="{Binding Title}" Margin="6,4,6,0" TextTrimming="CharacterEllipsis"
+                                   ToolTip.Tip="{Binding RelativePath}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>

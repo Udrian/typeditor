@@ -1,0 +1,120 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:TypeDitor.ViewModel.Panels"
+             xmlns:sys="using:System"
+             xmlns:local="clr-namespace:TypeDitor.View.Panels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="TypeDitor.View.Panels.PropertiesPanel"
+             x:DataType="vm:PropertiesViewModel">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <vm:TypeToDataTemplateConverter x:Key="TypeToDataTemplateConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,*">
+        <Grid ColumnDefinitions="*,Auto" Margin="6" ColumnSpacing="6">
+            <TextBox Text="{Binding FilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     PlaceholderText="Filter properties..."
+                     ToolTip.Tip="Filter property names, groups, and values"/>
+            <ToggleButton Grid.Column="1" Content="A-Z"
+                          IsChecked="{Binding SortAlphabetically, Mode=TwoWay}"
+                          ToolTip.Tip="Sort groups and properties alphabetically; turn off to restore your custom order"/>
+        </Grid>
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+    <ItemsControl
+         x:Name="PropertiesList"
+         ItemsSource="{Binding PropertyGroups}"
+         Grid.IsSharedSizeScope="True"
+         Background="Transparent"
+         Padding="0"
+         BorderThickness="0">
+
+        <ItemsControl.Styles>
+            <Style Selector="TextBox.PropertyInput">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="8,4"/>
+                <Setter Property="MinHeight" Value="0"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="VerticalAlignment" Value="Stretch"/>
+            </Style>
+        </ItemsControl.Styles>
+
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <StackPanel Classes="PropertyGroup">
+                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                            Padding="8,6" Margin="0,4,0,0"
+                            Cursor="Hand" ToolTip.Tip="Click to collapse or expand; drag to reorder"
+                            PointerPressed="GroupHeader_PointerPressed"
+                            PointerMoved="GroupHeader_PointerMoved"
+                            PointerReleased="GroupHeader_PointerReleased"
+                            PointerCaptureLost="GroupHeader_PointerCaptureLost">
+                        <Grid ColumnDefinitions="16,*">
+                            <TextBlock Text="{Binding Indicator}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold"/>
+                        </Grid>
+                    </Border>
+                    <ItemsControl ItemsSource="{Binding Properties}" IsVisible="{Binding IsExpanded}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="28" ToolTip.Tip="{Binding Description}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="LabelColumn" />
+                                        <ColumnDefinition Width="1" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Classes="PropertyLabel"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                            BorderThickness="0,0,1,1"
+                                            Padding="8,0"
+                                            Background="{Binding HasValidationError, Converter={x:Static local:PropertyErrorBackgroundConverter.Instance}, ConverterParameter=HasValidationError}"
+                                            ToolTip.Tip="{Binding NameToolTip}"
+                                            Cursor="SizeAll"
+                                            PointerPressed="GroupHeader_PointerPressed"
+                                            PointerMoved="GroupHeader_PointerMoved"
+                                            PointerReleased="GroupHeader_PointerReleased"
+                                            PointerCaptureLost="GroupHeader_PointerCaptureLost">
+                                        <TextBlock Text="{Binding Name}"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                    </Border>
+
+                                    <GridSplitter Grid.Column="1"
+                                                  Background="Transparent"
+                                                  Width="6"
+                                                  Margin="-3,0"
+                                                  ResizeDirection="Columns" />
+
+                                    <Border Grid.Column="2"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                            BorderThickness="0,0,0,1">
+                                        <ContentControl Content="{Binding .}"
+                                                        ContentTemplate="{Binding Converter={StaticResource TypeToDataTemplateConverter}}" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+                <WrapPanel Orientation="Horizontal" Margin="8"
+                           IsVisible="{Binding IsFilterActive}">
+                    <TextBlock Text="{Binding FilterStatus}" VerticalAlignment="Center" Opacity="0.7"
+                               Margin="0,0,8,0"/>
+                    <Button Content="Clear filter" Command="{Binding ClearFilterCommand}"
+                            Background="Transparent" BorderThickness="0" Padding="0"
+                            VerticalAlignment="Center" Cursor="Hand"/>
+                </WrapPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
