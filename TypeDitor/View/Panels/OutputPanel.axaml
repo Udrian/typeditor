@@ -6,10 +6,42 @@
              xmlns:local="clr-namespace:TypeDitor.View.Panels"
              x:Class="TypeDitor.View.Panels.OutputPanel"
              Unloaded="Panel_Unloaded">
-    <Grid>
-        <TextBox
+    <Grid RowDefinitions="Auto,*">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6" Margin="4,4,4,2">
+            <ComboBox Name="cbOutputView" SelectedIndex="{Binding SelectedViewIndex}" VerticalAlignment="Center">
+                <ComboBoxItem Content="Output"/>
+                <ComboBoxItem Content="Game Log"/>
+            </ComboBox>
+            <TextBox Name="tbSearch" Width="200" PlaceholderText="Search" Text="{Binding SearchText}"
+                     IsVisible="{Binding IsGameLogView}" VerticalAlignment="Center"/>
+            <ItemsControl ItemsSource="{Binding LevelFilters}" IsVisible="{Binding IsGameLogView}" VerticalAlignment="Center">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="6"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox Content="{Binding Name}" IsChecked="{Binding IsEnabled}" VerticalAlignment="Center"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Content="Clear" Click="btnClearGameLog_Click" IsVisible="{Binding IsGameLogView}" VerticalAlignment="Center"/>
+        </StackPanel>
+        <TextBox Grid.Row="1"
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
             ScrollViewer.VerticalScrollBarVisibility="Visible"
+            IsVisible="{Binding !IsGameLogView}"
             Name="tbOutputText" TextChanged="tbOutputText_TextChanged" IsReadOnly="True" Text="{Binding OutputText}"/>
+        <ScrollViewer Grid.Row="1" Name="svGameLog" IsVisible="{Binding IsGameLogView}"
+                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible">
+            <ItemsControl Name="icGameLog" ItemsSource="{Binding GameLogLines}" Margin="4,0,4,4">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <SelectableTextBlock Text="{Binding Text}" Foreground="{Binding Brush}" FontFamily="Cascadia Code,Consolas,Menlo,monospace"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

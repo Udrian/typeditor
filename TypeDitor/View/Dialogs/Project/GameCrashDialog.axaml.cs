@@ -72,7 +72,10 @@ namespace TypeDitor.View.Dialogs.Project
             details.AppendLine("Exception:");
             details.AppendLine(report.Exception.ToString());
             details.AppendLine();
-            details.AppendLine("Game log output:");
+            details.AppendLine("Game log:");
+            details.AppendLine(string.IsNullOrWhiteSpace(report.GameLog) ? "<no game log captured>" : report.GameLog.TrimEnd());
+            details.AppendLine();
+            details.AppendLine("Editor log output:");
             details.AppendLine(string.IsNullOrEmpty(report.LogOutput) ? "<no log output captured>" : report.LogOutput);
             return details.ToString();
         }

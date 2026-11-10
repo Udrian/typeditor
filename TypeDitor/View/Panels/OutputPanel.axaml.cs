@@ -1,5 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
+using System.Collections.Specialized;
 using TypeDitor.ViewModel.Panels;
 
 namespace TypeDitor.View.Panels
@@ -20,6 +22,20 @@ namespace TypeDitor.View.Panels
 
             OutputViewModel = new OutputViewModel(this);
             DataContext = OutputViewModel;
+
+            OutputViewModel.GameLogLines.CollectionChanged += GameLogLines_CollectionChanged;
+        }
+
+        private void GameLogLines_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            // Keep the newest game log lines visible, scrolled after the layout pass has run
+            if (e.Action == NotifyCollectionChangedAction.Add)
+                Dispatcher.UIThread.Post(() => svGameLog.ScrollToEnd(), DispatcherPriority.Background);
+        }
+
+        private void btnClearGameLog_Click(object sender, RoutedEventArgs e)
+        {
+            OutputViewModel.ClearGameLog();
         }
 
         private void tbOutputText_TextChanged(object sender, TextChangedEventArgs e)
