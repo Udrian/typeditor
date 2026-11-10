@@ -25,6 +25,11 @@ namespace TypeDitor.View.Dialogs.Project
             ViewModel.OpenLocation();
         }
 
+        private void AddLocalModule_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.AddLocalModule();
+        }
+
         private void CreateButton_Click(object sender, RoutedEventArgs e)
         {
             if (!ViewModel.Validate())

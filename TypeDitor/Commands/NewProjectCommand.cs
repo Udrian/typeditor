@@ -47,8 +47,8 @@ namespace TypeDitor.Commands
                     // Collect selected modules with author information
                     currentStep = "Collecting selected modules";
                     var selectedModules = newProjectDialog.ViewModel.GetSelectedModules();
-                    var modulesToAdd = new ObservableCollection<(string Author, string Name, string Version)>(
-                        selectedModules.Select(m => (m.Author, m.Name, m.Version))
+                    var modulesToAdd = new ObservableCollection<(string Author, string Name, string Version, string LocalPath)>(
+                        selectedModules.Select(m => (m.Author, m.Name, m.Version, m.LocalPath))
                     );
                     logLines.Enqueue($"[{DateTime.Now:HH:mm:ss}] > Selected {modulesToAdd.Count} modules");
 

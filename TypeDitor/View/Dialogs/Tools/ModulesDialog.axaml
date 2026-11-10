@@ -30,6 +30,8 @@
             <Separator Grid.Row="1" VerticalAlignment="Top"/>
             <TextBlock Grid.Row="2" Foreground="Gray" DataContext="{Binding SelectedModule}" Text="{Binding DisplayVersion}"/>
             <ComboBox Grid.Row="3" DataContext="{Binding SelectedModule}" ItemsSource="{Binding Versions}" SelectedValue="{Binding Version}"/>
+            <TextBlock Grid.Row="4" MaxWidth="175" Margin="0,5" TextWrapping="Wrap" Foreground="Orange" VerticalAlignment="Top"
+                       DataContext="{Binding SelectedModule}" Text="{Binding Warning}" IsVisible="{Binding HasWarning}"/>
             <Button Grid.Row="5" Content="_Install" Width="175" Margin="0,2" HorizontalAlignment="Center" Click="InstallButton_Click" />
             <Button Grid.Row="6" Content="Upd_ate" Width="175" Margin="0,2" HorizontalAlignment="Center" Click="UpdateButton_Click" />
             <Button Grid.Row="7" Content="_Uninstall" Width="175" Margin="0,2" HorizontalAlignment="Center" Click="UninstallButton_Click" />
@@ -58,6 +60,7 @@
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="10" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition/>
@@ -67,6 +70,8 @@
                         <CheckBox IsChecked="{Binding Enabled}" IsEnabled="False" VerticalAlignment="Center" Grid.RowSpan="2" />
                         <TextBlock Grid.Column="2" Text="{Binding Name}" />
                         <TextBlock Grid.Column="2" Grid.Row="1" FontSize="10" Foreground="DimGray" Text="{Binding DisplayVersion}" />
+                        <TextBlock Grid.Column="3" Grid.RowSpan="2" VerticalAlignment="Center" FontSize="16" Foreground="Orange"
+                                   Text="&#9888;" IsVisible="{Binding HasWarning}" ToolTip.Tip="{Binding Warning}" />
                     </Grid>
 
                 </DataTemplate>

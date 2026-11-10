@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
     {
         public class Module : ViewModelBase
         {
+            internal ModulesDialogViewModel Owner { get; set; }
+
             public string Name { get; set; }
             public string Author { get; set; }
             public bool Enabled { get; set; }
@@ -21,9 +24,44 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             public bool IsLocal { get; set; }
             public string LocalPath { get; set; }
             public string InstalledVersion { get; set; }
-            public string Version { get; set; }
-            public List<string> Versions { get; set; } = new List<string>();
+            public ObservableCollection<string> Versions { get; set; } = new ObservableCollection<string>();
+
+            private string version;
+            public string Version
+            {
+                get => version;
+                set
+                {
+                    if (version == value) return;
+                    version = value;
+                    OnPropertyChanged();
+                    Owner?.SelectionChanged();
+                }
+            }
+
+            private string warning;
+            public string Warning
+            {
+                get => warning;
+                set
+                {
+                    if (warning == value) return;
+                    warning = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(HasWarning));
+                }
+            }
+            public bool HasWarning { get { return !string.IsNullOrEmpty(Warning); } }
+
             public string DisplayVersion { get { return IsLocal ? $"local: {LocalPath}" : InstalledVersion; } }
+
+            internal void SetVersionSilently(string value)
+            {
+                if (version == value) return;
+                version = value;
+                if (!string.IsNullOrEmpty(value) && !Versions.Contains(value)) Versions.Add(value);
+                OnPropertyChanged(nameof(Version));
+            }
         }
 
         // Models
@@ -53,6 +91,11 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         }
         public bool Idle { get { return !Busy; } }
 
+        // Fetched product descriptions by author@name-version, so changing selections does not fetch again
+        private readonly Dictionary<string, ModuleTypeO> infoCache = new Dictionary<string, ModuleTypeO>();
+        private bool refreshingSelection;
+        private bool refreshPending;
+
         // Constructors
         public ModulesDialogViewModel(Control element, TypeD.Models.Data.Project loadedProject) : base(element)
         {
@@ -68,6 +111,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         public async Task ListModules()
         {
             Busy = true;
+            refreshingSelection = true;
             try
             {
                 var selectedName = SelectedModule?.Name;
@@ -87,7 +131,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                     var used = LoadedProject.Modules.Find(m => m.Name == entry.Name);
                     var dependency = dependencies.Find(d => d.Name == entry.Name);
                     var versions = entry.Versions;
-                    Modules.Add(new Module()
+                    var module = new Module()
                     {
                         Name = entry.Name,
                         Author = entry.Author ?? dependency?.Author,
@@ -96,9 +140,11 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                         IsLocal = dependency?.IsLocal ?? used?.IsLocal ?? false,
                         LocalPath = dependency?.LocalPath,
                         InstalledVersion = dependency?.Version ?? used?.Version ?? "",
-                        Version = dependency?.Version ?? versions.FirstOrDefault() ?? "",
-                        Versions = versions
-                    });
+                        Versions = new ObservableCollection<string>(versions)
+                    };
+                    module.SetVersionSilently(dependency?.Version ?? ModuleSelection.LatestVersion(versions) ?? versions.FirstOrDefault() ?? "");
+                    module.Owner = this;
+                    Modules.Add(module);
                 }
                 SelectedModule = Modules.FirstOrDefault(m => m.Name == selectedName);
                 OnPropertyChanged(nameof(SelectedModule));
@@ -110,8 +156,92 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             }
             finally
             {
+                refreshingSelection = false;
                 Busy = false;
             }
+            SelectionChanged();
+        }
+
+        // Raises the versions the selected modules require on their dependencies, then recomputes the update warnings
+        internal async void SelectionChanged()
+        {
+            if (refreshingSelection)
+            {
+                refreshPending = true;
+                return;
+            }
+
+            refreshingSelection = true;
+            try
+            {
+                do
+                {
+                    refreshPending = false;
+                    await RefreshSelection();
+                } while (refreshPending);
+            }
+            catch (System.Exception e)
+            {
+                ResourceModel.Get<ILogModel>()?.Log($"Could not resolve the module selection: {e}");
+            }
+            finally
+            {
+                refreshingSelection = false;
+            }
+        }
+
+        private async Task RefreshSelection()
+        {
+            var selected = new Dictionary<string, ModuleTypeO>(StringComparer.OrdinalIgnoreCase);
+
+            var changed = true;
+            while (changed)
+            {
+                changed = false;
+                selected.Clear();
+                foreach (var module in Modules.Where(m => m.Enabled).ToList())
+                {
+                    selected[module.Name] = await Info(module);
+                }
+
+                foreach (var requirement in ModuleSelection.RequiredVersions(selected.Select(s => (s.Key, s.Value))).Values)
+                {
+                    var module = Modules.FirstOrDefault(m => m.Name == requirement.Name);
+                    if (module == null || module.IsLocal || !module.Enabled) continue;
+                    if (ModuleSelection.CompareVersions(module.Version, requirement.Version) < 0)
+                    {
+                        module.SetVersionSilently(requirement.Version);
+                        changed = true;
+                    }
+                }
+            }
+
+            var required = ModuleSelection.RequiredVersions(selected.Select(s => (s.Key, s.Value)));
+            foreach (var module in Modules)
+            {
+                // Installed modules warn on their installed version, so the warning stays until they are actually updated
+                var version = module.Enabled && !string.IsNullOrEmpty(module.InstalledVersion) && !module.IsLocal
+                    ? module.InstalledVersion : module.Version;
+                module.Warning = module.Enabled
+                    ? ModuleSelection.Warning(module.Name, version, selected.GetValueOrDefault(module.Name), required,
+                        name => Modules.FirstOrDefault(m => m.Enabled && m.Name == name)?.Version)
+                    : null;
+            }
+        }
+
+        private async Task<ModuleTypeO> Info(Module module)
+        {
+            var used = LoadedProject.Modules.Find(m => m.Name == module.Name);
+            if (module.IsLocal) return used?.TypeO;
+            if (used != null && used.Version == module.Version && used.TypeO != null) return used.TypeO;
+            if (string.IsNullOrEmpty(module.Author) || string.IsNullOrEmpty(module.Version)) return used?.TypeO;
+
+            var key = $"{module.Author}@{module.Name}-{module.Version}";
+            if (!infoCache.TryGetValue(key, out var typeO))
+            {
+                infoCache[key] = typeO = await ModuleProvider.Info(module.Author, module.Name, module.Version) ?? used?.TypeO;
+            }
+            return typeO;
         }
 
         public Task InstallSelectedModule()
@@ -125,7 +255,9 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         {
             var module = SelectedModule;
             if (module == null || !module.IsDirect || module.IsLocal) return Task.CompletedTask;
-            return Run(() => ModuleModel.Update(LoadedProject, module.Name));
+            // Updates to the selected version when one newer than the installed one is picked, otherwise to the latest
+            var version = ModuleSelection.CompareVersions(module.Version, module.InstalledVersion) > 0 ? module.Version : null;
+            return Run(() => ModuleModel.Update(LoadedProject, module.Name, version));
         }
 
         public Task UninstallSelectedModule()
