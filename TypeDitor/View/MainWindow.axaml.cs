@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using System;
 using TypeD.Models.Data;
 using TypeDitor.ViewModel;
+using TypeDitor.View.Dialogs.Tools;
 
 namespace TypeDitor.View
 {
@@ -63,6 +64,11 @@ namespace TypeDitor.View
         private void ModulesMenuItem_Click(object sender, RoutedEventArgs e)
         {
             ViewModel.OpenModulesWindow();
+        }
+
+        private async void AboutMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            await new AboutDialog(ViewModel.LoadedProject).ShowDialog(this);
         }
 
         private async void Window_Closing(object sender, WindowClosingEventArgs e)
