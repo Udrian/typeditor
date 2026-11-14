@@ -45,12 +45,13 @@ namespace TypeDitor.ViewModel.Panels
     /// <summary>Converts property values to templates selected by their runtime type.</summary>
     public class TypeToDataTemplateConverter : IValueConverter
     {
-        private Dictionary<Type, IDataTemplate> TemplateCache { get; } = new Dictionary<Type, IDataTemplate>();
+        private Dictionary<(Type PropertyType, Type TemplateType), IDataTemplate> TemplateCache { get; } = new();
 
         /// <summary>
         /// Creates the template for a property type, or returns null if the type has no definition.
         /// </summary>
-        public Func<Type, IDataTemplate?>? TemplateResolver { get; set; }
+        public Func<PropertyNode, Type?>? TemplateTypeResolver { get; set; }
+        public Func<PropertyNode, IDataTemplate?>? TemplateResolver { get; set; }
 
         /// <summary>Gets or sets the fallback template used when no type-specific template is found.</summary>
         public IDataTemplate? DefaultTemplate { get; set; }
@@ -58,22 +59,21 @@ namespace TypeDitor.ViewModel.Panels
         /// <summary>Returns the template for the value's type, or the default template if none is registered.</summary>
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo? culture)
         {
-            Type type = null;
             if (value is PropertyNode node)
             {
-                type = node.Type ?? node.Value?.GetType();
-            }
-
-            if (type != null)
-            {
-                if (!TemplateCache.TryGetValue(type, out var template))
+                var templateType = TemplateTypeResolver?.Invoke(node) ?? node.Type ?? node.Value?.GetType();
+                if (templateType != null)
                 {
-                    template = TemplateResolver?.Invoke(type);
+                    var key = (node.Type, templateType);
+                    if (!TemplateCache.TryGetValue(key, out var template))
+                    {
+                        template = TemplateResolver?.Invoke(node);
+                        if (template != null)
+                            TemplateCache[key] = template;
+                    }
                     if (template != null)
-                        TemplateCache[type] = template;
+                        return template;
                 }
-                if (template != null)
-                    return template;
             }
 
             return DefaultTemplate;
@@ -177,7 +177,19 @@ namespace TypeDitor.ViewModel.Panels
 
             Converter = new TypeToDataTemplateConverter
             {
-                TemplateResolver = type => PropertyModel.Get(type)?.CreateTemplate(),
+                TemplateTypeResolver = node =>
+                {
+                    var definition = PropertyModel.Get(node.Property.Type);
+                    return node.Property.PropertyTemplateType ?? definition?.PropertyTemplateType ?? node.Property.Type;
+                },
+                TemplateResolver = node =>
+                {
+                    var definition = PropertyModel.Get(node.Property.Type);
+                    var templateType = node.Property.PropertyTemplateType ?? definition?.PropertyTemplateType ?? node.Property.Type;
+                    return PropertyModel.GetTemplate(templateType)?.CreateTemplate()
+                        ?? PropertyModel.Get(templateType)?.CreateTemplate()
+                        ?? definition?.CreateTemplate();
+                },
                 // Fallback: edit unknown types as strings.
                 DefaultTemplate = PropertyModel.Get(typeof(string))?.CreateTemplate()
             };
@@ -243,7 +255,11 @@ namespace TypeDitor.ViewModel.Panels
                         throw new InvalidOperationException($"Could not execute the change-property command for '{node.Property.Name}'.");
                 };
                 var definition = PropertyModel.Get(property.Type);
-                PropertyNodes.Add(definition?.CreateNode(Component, property, valueChanged) ?? new PropertyNode(Component, property, valueChanged));
+                var templateType = property.PropertyTemplateType ?? definition?.PropertyTemplateType ?? property.Type;
+                var template = PropertyModel.GetTemplate(templateType);
+                PropertyNodes.Add(template?.CreateNode(Component, property, valueChanged)
+                    ?? definition?.CreateNode(Component, property, valueChanged)
+                    ?? new PropertyNode(Component, property, valueChanged));
             }
             RefreshGroups();
         }

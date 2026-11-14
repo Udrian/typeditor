@@ -20,9 +20,9 @@ namespace TypeDitor.View.Dialogs.Project
             DataContext = new NewProjectViewModel();
         }
 
-        private void btnOpenLocation_Click(object sender, RoutedEventArgs e)
+        private async void btnOpenLocation_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.OpenLocation();
+            await ViewModel.OpenLocation(StorageProvider);
         }
 
         private void AddLocalModule_Click(object sender, RoutedEventArgs e)

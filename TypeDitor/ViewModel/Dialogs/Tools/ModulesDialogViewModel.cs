@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -72,6 +73,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         IModuleProvider ModuleProvider { get; set; }
 
         // Data
+        private readonly Window OwnerWindow;
         TypeD.Models.Data.Project LoadedProject { get; set; }
         public ObservableCollection<Module> Modules { get; set; }
 
@@ -97,8 +99,9 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         private bool refreshPending;
 
         // Constructors
-        public ModulesDialogViewModel(Control element, TypeD.Models.Data.Project loadedProject) : base(element)
+        public ModulesDialogViewModel(Window element, TypeD.Models.Data.Project loadedProject) : base(element)
         {
+            OwnerWindow = element;
             Modules = new ObservableCollection<Module>();
             LoadedProject = loadedProject;
 
@@ -153,6 +156,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             catch (System.Exception e)
             {
                 ResourceModel.Get<ILogModel>()?.Log($"Could not list modules: {e}");
+                await ShowModuleError(e.Message);
             }
             finally
             {
@@ -232,7 +236,9 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         private async Task<ModuleTypeO> Info(Module module)
         {
             var used = LoadedProject.Modules.Find(m => m.Name == module.Name);
-            if (module.IsLocal) return used?.TypeO;
+            if (module.IsLocal)
+                return used != null ? used.TypeO
+                    : ModuleProvider.ReadLocal(Path.GetFullPath(module.LocalPath, LoadedProject.Location))?.Versions.FirstOrDefault();
             if (used != null && used.Version == module.Version && used.TypeO != null) return used.TypeO;
             if (string.IsNullOrEmpty(module.Author) || string.IsNullOrEmpty(module.Version)) return used?.TypeO;
 
@@ -309,13 +315,26 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             Busy = true;
             try
             {
-                await action();
+                if (!await action())
+                    await ShowModuleError("The module change could not be completed. See the Output log for details.");
+            }
+            catch (Exception exception)
+            {
+                ResourceModel.Get<ILogModel>()?.Log($"Could not change project modules: {exception}");
+                await ShowModuleError(exception.Message);
             }
             finally
             {
                 Busy = false;
             }
             await ListModules();
+        }
+
+        private Task ShowModuleError(string message)
+        {
+            return MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                "Could not change project modules", message, MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(OwnerWindow);
         }
     }
 }

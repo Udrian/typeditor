@@ -37,6 +37,10 @@ namespace TypeDitor.Commands
             {
                 path = (param as Recent).Path;
             }
+            else if (param is string projectFilePath)
+            {
+                path = projectFilePath;
+            }
             else
             {
                 var files = await ViewModelBase.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions

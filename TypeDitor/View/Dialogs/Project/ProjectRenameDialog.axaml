@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TypeDitor.View.Dialogs.Project"
+        x:Class="TypeDitor.View.Dialogs.Project.ProjectRenameDialog"
+        x:DataType="vm:ProjectRenameDialog"
+        Title="Rename project" Width="700" Height="560"
+        MinWidth="580" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="10">
+        <TextBlock Text="Rename project" FontSize="24" FontWeight="SemiBold"/>
+        <TextBox Grid.Row="1" PlaceholderText="New project name"
+                 Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}"/>
+        <StackPanel Grid.Row="2" Spacing="3">
+            <TextBlock Text="The project identifier is always renamed. Choose which associated paths and files to update:"
+                       FontWeight="SemiBold" TextWrapping="Wrap"/>
+            <TextBlock Text="Selected source and generated-data folders also update matching text references. Unchecked items may need manual repair."
+                       FontSize="12" Opacity="0.7" TextWrapping="Wrap"/>
+        </StackPanel>
+        <ListBox Grid.Row="3" ItemsSource="{Binding Plan.Assets}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="Auto,*" Margin="4">
+                        <CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding !IsRequired}"
+                                  VerticalAlignment="Top" Margin="0,2,8,0"/>
+                        <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding Path}" FontSize="11" Opacity="0.7"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="Cancel" Click="Cancel_Click"/>
+            <Button Content="Rename" IsEnabled="{Binding CanRename}" Click="Rename_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

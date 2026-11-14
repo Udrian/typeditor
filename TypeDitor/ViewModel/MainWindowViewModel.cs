@@ -84,7 +84,6 @@ namespace TypeDitor.ViewModel
         public ExitProjectCommand ExitProjectCommand { get; set; }
         public NewProjectCommand NewProjectCommand { get; set; }
         public ImportProjectCommand ImportProjectCommand { get; set; }
-        public OpenProjectCommand OpenProjectCommand { get; set; }
         public RunProjectCommand RunProjectCommand { get; set; }
         public SaveProjectCommand SaveProjectCommand { get; set; }
         public OpenPanelCommand OpenPanelCommand { get; set; }
@@ -323,7 +322,6 @@ namespace TypeDitor.ViewModel
             ExitProjectCommand = new ExitProjectCommand();
             NewProjectCommand = new NewProjectCommand();
             ImportProjectCommand = new ImportProjectCommand();
-            OpenProjectCommand = new OpenProjectCommand();
             RunProjectCommand = new RunProjectCommand();
             SaveProjectCommand = new SaveProjectCommand();
             CommandRegistrations.Add(EditorCommandRegistry.Register(
@@ -384,7 +382,7 @@ namespace TypeDitor.ViewModel
                 "Open an existing project.",
                 "global",
                 string.Empty,
-                _ => OpenProjectCommand.Execute(null)));
+                _ => MainWindow.OpenProjectWindow()));
             CommandRegistrations.Add(EditorCommandRegistry.Register(
                 "project.exit",
                 "Exit project",

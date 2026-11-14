@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Text;
-using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
 using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
+using TypeDitor.Models;
 using TypeDitor.View.Dialogs.Project;
 
 namespace TypeDitor.Commands
@@ -77,6 +74,16 @@ namespace TypeDitor.Commands
                     
                     currentStep = "Adding to recent projects";
                     RecentProvider.Add(newProject.ProjectFilePath, newProject.ProjectName);
+                    currentStep = "Adding project folder to scan folders";
+                    try
+                    {
+                        ProjectScanSettings.AddFolder(ResourceModel.Get<ISettingModel>(), location);
+                    }
+                    catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                        ArgumentException or InvalidOperationException or NotSupportedException)
+                    {
+                        LogModel.Log($"Could not add '{location}' to the project scan folders: {exception}");
+                    }
                     currentStep = "Opening project";
                     this.OpenMainWindow(newProject);
                 }

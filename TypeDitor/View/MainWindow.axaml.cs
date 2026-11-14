@@ -15,6 +15,7 @@ namespace TypeDitor.View
     {
         // Properties
         private bool CanClose { get; set; } = false;
+        private ProjectWindow ProjectWindow { get; set; }
 
         // ViewModel
         MainWindowViewModel ViewModel { get; set; }
@@ -64,6 +65,24 @@ namespace TypeDitor.View
         private void ModulesMenuItem_Click(object sender, RoutedEventArgs e)
         {
             ViewModel.OpenModulesWindow();
+        }
+
+        private void OpenProjectWindow_Click(object sender, RoutedEventArgs e)
+        {
+            OpenProjectWindow();
+        }
+
+        public void OpenProjectWindow()
+        {
+            if (ProjectWindow != null)
+            {
+                ProjectWindow.Activate();
+                return;
+            }
+
+            ProjectWindow = new ProjectWindow();
+            ProjectWindow.Closed += (_, _) => ProjectWindow = null;
+            ProjectWindow.Show(this);
         }
 
         private async void AboutMenuItem_Click(object sender, RoutedEventArgs e)

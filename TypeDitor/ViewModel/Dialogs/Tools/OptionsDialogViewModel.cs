@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -11,6 +12,7 @@ using TypeD.Models.Data.SettingContexts;
 using TypeD.Models.Interfaces;
 using TypeD.View;
 using TypeD.ViewModel;
+using TypeDitor.Models;
 
 namespace TypeDitor.ViewModel.Dialogs.Tools
 {
@@ -62,28 +64,43 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
 
                     var current = Item.Setting.GetValue();
                     var defaultValue = RevertValue;
-                    return !Equals(current, defaultValue);
+                    return !ValuesEqual(current, defaultValue);
                 }
             }
 
-            public Option(SettingItem item, IPropertyModel propertyModel, ISettingModel settings = null, TypeD.Models.Data.Project project = null)
+            public Option(SettingItem item, IPropertyModel propertyModel, ISettingModel settings = null,
+                TypeD.Models.Data.Project project = null, bool allowProjectDefault = true)
             {
                 Item = item;
                 Settings = settings;
                 Project = project;
-                DefaultSetting = item.Setting;
+                DefaultSetting = allowProjectDefault ? item.Setting : null;
                 var property = new Property
                 {
                     Name = item.Title,
                     Description = item.Description,
                     Group = item.Category,
                     Type = item.Setting.GetValueType(),
-                    Value = item.Setting.GetValue()
+                    Value = item.Setting.GetValue(),
+                    PropertyTemplateType = item.Setting.PropertyTemplateType
                 };
                 var definition = propertyModel.Get(property.Type);
-                Editor = definition?.CreateNode(null, property, (_, value) => SetValue(value))
-                    ?? new PropertyNode(null, property, (_, value) => SetValue(value));
-                EditorTemplate = (definition ?? propertyModel.Get(typeof(string)))?.CreateTemplate();
+                var templateType = item.Setting.PropertyTemplateType ?? definition?.PropertyTemplateType ?? property.Type;
+                var template = propertyModel.GetTemplate(templateType);
+                if (template != null)
+                {
+                    Editor = template.CreateNode(null, property, (_, value) => SetValue(value))
+                        ?? definition?.CreateNode(null, property, (_, value) => SetValue(value))
+                        ?? new PropertyNode(null, property, (_, value) => SetValue(value));
+                    EditorTemplate = template.CreateTemplate();
+                }
+                else
+                {
+                    var templateDefinition = propertyModel.Get(templateType) ?? definition;
+                    Editor = templateDefinition?.CreateNode(null, property, (_, value) => SetValue(value))
+                        ?? new PropertyNode(null, property, (_, value) => SetValue(value));
+                    EditorTemplate = (templateDefinition ?? propertyModel.Get(typeof(string)))?.CreateTemplate();
+                }
             }
 
             public Option(EditorCommand command, Action<EditorCommand, string> setShortcut,
@@ -146,6 +163,13 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 OnPropertyChanged(nameof(CanRevert));
             }
 
+            private static bool ValuesEqual(object left, object right)
+            {
+                if (left is IEnumerable<string> leftFolders && right is IEnumerable<string> rightFolders)
+                    return leftFolders.SequenceEqual(rightFolders, StringComparer.Ordinal);
+                return Equals(left, right);
+            }
+
             public void UpdateShortcut(string shortcut)
             {
                 if (!IsShortcut)
@@ -173,7 +197,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
 
         public ObservableCollection<SettingCategory> Categories { get; } = new();
         public ObservableCollection<SettingCategory> DisplayedCategories { get; } = new();
-        public string ShortcutError { get; private set; } = string.Empty;
+        public string ErrorMessage { get; private set; } = string.Empty;
 
         public SettingCategory SelectedCategory
         {
@@ -185,7 +209,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             }
         }
 
-        public OptionsDialogViewModel(Control element, TypeD.Models.Data.Project loadedProject) : base(element)
+        public OptionsDialogViewModel(Window window, TypeD.Models.Data.Project loadedProject) : base(window)
         {
             HookModel = ResourceModel.Get<IHookModel>();
             SettingModel = ResourceModel.Get<ISettingModel>();
@@ -213,6 +237,20 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 category.Options.Add(new Option(item, PropertyModel, SettingModel, LoadedProject));
             }
 
+            var scanSettings = SettingModel.GetContext<ProjectScanSettingContext>(SettingLevel.User);
+            var scanFoldersCategory = categories.TryGetValue("Projects", out var existingCategory)
+                ? existingCategory
+                : new SettingCategory("Projects");
+            scanFoldersCategory.Options.Add(new Option(
+                new SettingItem(
+                    "Project scan folders",
+                    "Folders to search recursively for TypeO projects.",
+                    scanSettings.Folders,
+                    value => SaveProjectScanFolders(scanSettings, value as List<string>),
+                    "Projects"),
+                PropertyModel, SettingModel, LoadedProject, allowProjectDefault: false));
+            categories[scanFoldersCategory.Name] = scanFoldersCategory;
+
             var shortcutCategory = new SettingCategory("Shortcuts");
             var shortcutSetting = SettingModel.GetContext<MainWindowSettingContext>()?.ShortcutOverrides;
             foreach (var command in CommandRegistry.Commands.OrderBy(command => command.Name))
@@ -227,6 +265,34 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 Categories.Add(category);
 
             RefreshDisplayedCategories();
+        }
+
+        private void SaveProjectScanFolders(ProjectScanSettingContext context, List<string> folders)
+        {
+            try
+            {
+                context.Folders.Value = folders ?? new List<string>();
+                SettingModel.SetContext(context, SettingLevel.User);
+                ShowError(string.Empty);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                ArgumentException or InvalidOperationException or NotSupportedException)
+            {
+                ShowProjectScanFolderError(exception);
+            }
+        }
+
+        private void ShowProjectScanFolderError(Exception exception)
+        {
+            var message = $"Could not update project scan folders: {exception.Message}";
+            ShowError(message);
+            ResourceModel.Get<ILogModel>()?.Log($"Could not update project scan folders: {exception}");
+        }
+
+        private void ShowError(string message)
+        {
+            ErrorMessage = message ?? string.Empty;
+            OnPropertyChanged(nameof(ErrorMessage));
         }
 
         public void ShowAllCategories()
@@ -250,8 +316,8 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
 
             if (conflict != null)
             {
-                ShortcutError = $"Shortcut is already assigned to {conflict.Name}.";
-                OnPropertyChanged(nameof(ShortcutError));
+                ErrorMessage = $"Shortcut is already assigned to {conflict.Name}.";
+                OnPropertyChanged(nameof(ErrorMessage));
                 return false;
             }
 
@@ -273,8 +339,8 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             SettingModel.SetContext(setting, SettingLevel.User);
             if (NormalizeShortcut(command.Shortcut) == NormalizeShortcut(revertValue))
                 SettingModel.ClearUserOverride(setting.ShortcutOverrides, command.Id);
-            ShortcutError = string.Empty;
-            OnPropertyChanged(nameof(ShortcutError));
+            ErrorMessage = string.Empty;
+            OnPropertyChanged(nameof(ErrorMessage));
             return true;
         }
 

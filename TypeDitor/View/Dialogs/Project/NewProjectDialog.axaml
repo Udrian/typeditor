@@ -31,14 +31,19 @@
                 <Label FontSize="16" Content="_Name:" Target="{Binding ElementName=txtName}" />
                 <TextBox Name="txtName" Margin="5,0,75,0" Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}" />
                 
-                <Label FontSize="16" Content="_Parent Folder:" Target="{Binding ElementName=txtLocation}" />
+                <Label FontSize="16" Content="_Project Folder:" Target="{Binding ElementName=cbProjectFolder}" />
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="75"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox Name="txtLocation" Margin="5,0,0,0" Text="{Binding ProjectLocation}" />
-                    <Button Name="btnOpenLocation" Content="_..." Width="25" Grid.Column="1" Margin="5, 0, 0, 0" HorizontalAlignment="Left" Click="btnOpenLocation_Click"/>
+                    <ComboBox Name="cbProjectFolder" Margin="5,0,0,0" HorizontalAlignment="Stretch"
+                              ItemsSource="{Binding ProjectFolders}"
+                              SelectedItem="{Binding ProjectLocation, Mode=TwoWay}"
+                              PlaceholderText="Select a project folder"
+                              ToolTip.Tip="{Binding ProjectLocation}" />
+                    <Button Name="btnOpenLocation" Content="_..." Width="25" Grid.Column="1" Margin="5, 0, 0, 0" HorizontalAlignment="Left"
+                            ToolTip.Tip="Add a new project folder" Click="btnOpenLocation_Click"/>
                 </Grid>
 
                 <Label FontSize="16" Content="CS _Solution name:" Target="{Binding ElementName=txtCSSolutionName}" />

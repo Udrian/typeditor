@@ -9,6 +9,7 @@ using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
 using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
+using TypeDitor.Models;
 
 namespace TypeDitor.ViewModel.Dialogs.Project
 {
@@ -108,7 +109,19 @@ namespace TypeDitor.ViewModel.Dialogs.Project
             }
         }
 
-        public string ProjectLocation { get; set; }
+        private string projectLocation;
+        public string ProjectLocation
+        {
+            get => projectLocation;
+            set
+            {
+                if (projectLocation == value) return;
+                projectLocation = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<string> ProjectFolders { get; } = new ObservableCollection<string>();
         public string ProjectCSSolutionName { get; set; }
         public string ProjectCSProjectName { get; set; }
 
@@ -133,30 +146,41 @@ namespace TypeDitor.ViewModel.Dialogs.Project
         // Constructors
         public NewProjectViewModel() : base()
         {
-            ProjectLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TypeD");
             AvailableModules = new ObservableCollection<Module>();
 
             ModuleModel = ResourceModel.Get<IModuleModel>();
             TyperModel = ResourceModel.Get<ITyperModel>();
             ModuleProvider = ResourceModel.Get<IModuleProvider>();
+
+            foreach (var folder in ProjectScanSettings.GetFolders(ResourceModel.Get<ISettingModel>()))
+                ProjectFolders.Add(folder);
+            ProjectLocation = ProjectFolders.FirstOrDefault();
         }
 
         // Functions
-        public async void OpenLocation()
+        public async Task OpenLocation(IStorageProvider storageProvider)
         {
-            var files = await MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            var folders = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = "Open Location Folder",
-                SuggestedStartLocation = await MainWindow.StorageProvider.TryGetFolderFromPathAsync(ProjectLocation),
+                Title = "Select Project Folder",
+                SuggestedStartLocation = string.IsNullOrEmpty(ProjectLocation)
+                    ? null
+                    : await storageProvider.TryGetFolderFromPathAsync(ProjectLocation),
                 AllowMultiple = false
-
             });
+            if (folders.Count < 1) return;
 
-            if (files.Count >= 1)
+            var path = folders[0].TryGetLocalPath();
+            if (string.IsNullOrEmpty(path)) return;
+            path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+
+            var existing = ProjectFolders.FirstOrDefault(folder => ProjectScanSettings.PathsEqual(folder, path));
+            if (existing == null)
             {
-                ProjectLocation = files[0].Path.AbsolutePath;
-                OnPropertyChanged(nameof(ProjectLocation));
+                ProjectFolders.Add(path);
+                existing = path;
             }
+            ProjectLocation = existing;
         }
 
         public async Task LoadAvailableModules()
@@ -327,6 +351,9 @@ namespace TypeDitor.ViewModel.Dialogs.Project
 
         public bool Validate()
         {
+            if (string.IsNullOrWhiteSpace(ProjectLocation))
+                return false;
+
             bool isValid = !string.IsNullOrEmpty(ProjectName) &&
                 ProjectName.IndexOfAny(Path.GetInvalidFileNameChars()) == -1 &&
                 !ProjectName.Contains(" ") &&

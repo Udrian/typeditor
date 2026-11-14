@@ -20,6 +20,30 @@ result. Neither project requires a reference to the other.
 
 Build the standalone editor solution with `dotnet build TypeDitor.slnx`.
 
+## Project window
+
+The Project Window scans configured folders recursively for TypeO executable
+projects and lists those with a matching `.typeo` project file. Configure the
+**Project scan folders** list in Options with the folder picker; recently opened
+projects appear first. The default scan folder is `Documents\TypeD`. The same
+window is available at startup and from **File > Open Project**.
+Each project shows the TypeD project format version stored in its `.typeo`
+file. **Upgrade on open** means the file uses an older format and will be
+upgraded (with a backup) when opened; **Needs newer TypeD** means the file is
+from a newer editor. Module format upgrades are checked when the project opens.
+When creating a project, pick its **Project Folder** from the configured scan
+folders, or use **...** to choose another folder. That folder is added to the
+scan folders once the project has been created.
+Right-click a project for **Open**, **Rename**, **Delete**, and **Update
+Modules**. Rename shows the project-related files and settings it found so you
+can choose which associated paths to change. Delete confirms before removing
+the project folder, its per-user settings/theme data, and its recent entry.
+Update Modules opens the Modules dialog directly without opening or building
+the project. Install, update, remove, and local-module actions save dependency
+configuration immediately; modules are resolved, built, and loaded the next
+time the project is opened. An already open project keeps using live module
+management.
+
 ## Copying nodes
 
 With the Component Explorer or Viewer focused:
@@ -59,8 +83,11 @@ Run engine paste-position checks with
 
 ## Options
 
-Ordinary settings use the same registered property editors as the Properties
-panel, selected by the declared `ISetting` value type (even for null values).
+Settings use the same registered property editors as the Properties panel.
+An explicitly associated `PropertyTemplateType` is used first; otherwise the
+editor is selected by the setting or property's value type (even for null
+values). This allows a registered editor to be reused for different value
+types without changing the default editor for every value of those types.
 Edits pass typed values to the setting's save callback. Revert restores the
 inherited default value and refreshes the editor.
 

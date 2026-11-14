@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using TypeD.ViewModel;
 using TypeDitor.ViewModel.Dialogs.Tools;
 
 namespace TypeDitor.View.Dialogs.Tools
@@ -21,11 +20,12 @@ namespace TypeDitor.View.Dialogs.Tools
         {
             DataContext = ModulesDialogViewModel = new ModulesDialogViewModel(this, loadedProject);
             InitializeComponent();
+            Title = $"Modules - {loadedProject.ProjectName}";
         }
 
         private async Task PickFolder(string title, Func<string, Task> action)
         {
-            var folders = await ViewModelBase.MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
                 Title = title,
                 AllowMultiple = false
@@ -88,6 +88,13 @@ namespace TypeDitor.View.Dialogs.Tools
         {
             base.OnOpened(e);
             await ModulesDialogViewModel.ListModules();
+        }
+
+        protected override void OnClosing(WindowClosingEventArgs e)
+        {
+            base.OnClosing(e);
+            if (ModulesDialogViewModel.Busy)
+                e.Cancel = true;
         }
 
         private void ModuleList_SelectionChanged(object sender, SelectionChangedEventArgs e)
