@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Authors>Simon Blixt Haggren</Authors>
+		<Company>Typedeaf</Company>
+		<Product>TypeO</Product>
+		<InvariantGlobalization>true</InvariantGlobalization>
+	</PropertyGroup>
+	<!-- Publish as a single self-contained executable so it runs before dotnet is installed:
+	     dotnet publish -c Release -r win-x64 (or linux-x64 / osx-x64) -->
+	<PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
+		<PublishSingleFile>true</PublishSingleFile>
+		<SelfContained>true</SelfContained>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="12.1.5" />
+		<PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.5" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.5" />
+	</ItemGroup>
+</Project>
