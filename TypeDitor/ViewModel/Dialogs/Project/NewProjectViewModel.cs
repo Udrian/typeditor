@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using Avalonia.Platform.Storage;
 using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
@@ -79,7 +74,7 @@ namespace TypeDitor.ViewModel.Dialogs.Project
                 IsLocal = true;
                 LocalPath = path;
                 LocalTypeO = typeO;
-                Version = typeO?.Version ?? "0.1.0";
+                Version = typeO?.Version ?? "0.0.0";
             }
         }
 

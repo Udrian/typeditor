@@ -42,6 +42,7 @@ namespace TypeDitor.View.Dialogs.Project
         private void OnCMDOutput(string output)
         {
             CMDOutput.Enqueue(output);
+            Dispatcher.UIThread.Post(() => AppendOutputLine(output));
         }
 
         public Bitmap Splash { get; }
@@ -143,7 +144,24 @@ namespace TypeDitor.View.Dialogs.Project
                 SubTask = update.SubTask;
                 SubIndeterminate = !update.SubProgress.HasValue;
                 SubProgress = update.SubProgress ?? 0;
+                if (!string.IsNullOrEmpty(update.SubTask)) AppendOutputLine(update.SubTask);
             });
+        }
+
+        private readonly System.Text.StringBuilder outputText = new System.Text.StringBuilder();
+        private string lastOutputLine;
+
+        public string Output => outputText.ToString();
+
+        // Collects the reported steps and command output, so the typer and build output stays visible
+        private void AppendOutputLine(string line)
+        {
+            if (string.IsNullOrEmpty(line) || line == lastOutputLine) return;
+            lastOutputLine = line;
+            outputText.AppendLine(line);
+            NotifyPropertyChanged(nameof(Output));
+            // Moving the caret to the end keeps the latest output visible
+            OutputBox.CaretIndex = outputText.Length;
         }
 
         public string GetCmdOutput()

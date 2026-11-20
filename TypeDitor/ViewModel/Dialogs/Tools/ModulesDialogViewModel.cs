@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel;
 using Avalonia.Controls;
 using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
 using TypeD.Models.Providers.Interfaces;
 using TypeD.ViewModel;
+using TypeDitor.View.Dialogs.Tools;
 
 namespace TypeDitor.ViewModel.Dialogs.Tools
 {
@@ -55,6 +52,8 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             public bool HasWarning { get { return !string.IsNullOrEmpty(Warning); } }
 
             public string DisplayVersion { get { return IsLocal ? $"local: {LocalPath}" : InstalledVersion; } }
+            public string DisplayName { get { return !string.IsNullOrEmpty(Author) ? $"{Author}@{Name}" : Name; } }
+            public bool IsTransitive { get { return !IsDirect && !IsLocal && !string.IsNullOrEmpty(InstalledVersion); } }
 
             internal void SetVersionSilently(string value)
             {
@@ -80,6 +79,9 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         // Properties
         public Module SelectedModule { get; set; }
         public bool SelectedModuleVisibility { get { return SelectedModule == null ? false : true; } }
+        public bool IsCurrentModuleInstalled { get { return SelectedModule != null && !string.IsNullOrEmpty(SelectedModule.InstalledVersion); } }
+        public bool IsCurrentModuleLocal { get { return SelectedModule != null && SelectedModule.IsLocal; } }
+        public bool IsCurrentModuleOnLatest { get { return SelectedModule != null && (ModuleSelection.CompareVersions(SelectedModule.Version, SelectedModule.InstalledVersion) > 0 ? SelectedModule.Version : null) != null; } }
         private bool busy;
         public bool Busy
         {
@@ -152,6 +154,8 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 SelectedModule = Modules.FirstOrDefault(m => m.Name == selectedName);
                 OnPropertyChanged(nameof(SelectedModule));
                 OnPropertyChanged(nameof(SelectedModuleVisibility));
+                OnPropertyChanged(nameof(IsCurrentModuleInstalled));
+                OnPropertyChanged(nameof(IsCurrentModuleLocal));
             }
             catch (System.Exception e)
             {
@@ -192,6 +196,7 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             {
                 refreshingSelection = false;
             }
+            OnPropertyChanged(nameof(IsCurrentModuleOnLatest));
         }
 
         private async Task RefreshSelection()
@@ -254,7 +259,8 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         {
             var module = SelectedModule;
             if (module == null || string.IsNullOrEmpty(module.Version)) return Task.CompletedTask;
-            return Run(() => ModuleModel.Add(LoadedProject, module.Author, module.Name, module.Version));
+            return Run($"Installing {module.Name} {module.Version}",
+                report => ModuleModel.Add(LoadedProject, module.Author, module.Name, module.Version, report));
         }
 
         public Task UpdateSelectedModule()
@@ -263,24 +269,26 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             if (module == null || !module.IsDirect || module.IsLocal) return Task.CompletedTask;
             // Updates to the selected version when one newer than the installed one is picked, otherwise to the latest
             var version = ModuleSelection.CompareVersions(module.Version, module.InstalledVersion) > 0 ? module.Version : null;
-            return Run(() => ModuleModel.Update(LoadedProject, module.Name, version));
+            return Run($"Updating {module.Name}",
+                report => ModuleModel.Update(LoadedProject, module.Name, version, report));
         }
 
         public Task UninstallSelectedModule()
         {
             var module = SelectedModule;
             if (module == null || !module.IsDirect) return Task.CompletedTask;
-            return Run(() => ModuleModel.Remove(LoadedProject, module.Name));
+            return Run($"Uninstalling {module.Name}",
+                report => ModuleModel.Remove(LoadedProject, module.Name, report));
         }
 
         public Task UseLocal(string path)
         {
             var module = SelectedModule;
             if (module == null) return Task.CompletedTask;
-            return Run(async () =>
+            return Run($"Using local {module.Name}", async report =>
             {
-                if (!module.IsDirect && !await ModuleModel.Add(LoadedProject, module.Author, module.Name, module.Version)) return false;
-                return await ModuleModel.UseLocal(LoadedProject, module.Name, path);
+                if (!module.IsDirect && !await ModuleModel.Add(LoadedProject, module.Author, module.Name, module.Version, report)) return false;
+                return await ModuleModel.UseLocal(LoadedProject, module.Name, path, report);
             });
         }
 
@@ -288,19 +296,22 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
         {
             var module = SelectedModule;
             if (module == null || !module.IsLocal) return Task.CompletedTask;
-            return Run(() => ModuleModel.UseReleased(LoadedProject, module.Name));
+            return Run($"Using released {module.Name}",
+                report => ModuleModel.UseReleased(LoadedProject, module.Name, report));
         }
 
         public Task UpdateLocalDependencies()
         {
             var module = SelectedModule;
             if (module == null || !module.IsLocal) return Task.CompletedTask;
-            return Run(() => ModuleModel.UpdateLocal(LoadedProject, module.Name));
+            return Run($"Updating dependencies of {module.Name}",
+                report => ModuleModel.UpdateLocal(LoadedProject, module.Name, report));
         }
 
         public Task CreateModule(string name, string outputPath)
         {
-            return Run(() => ModuleModel.CreateLocal(LoadedProject, name, outputPath));
+            return Run($"Creating module {name}",
+                report => ModuleModel.CreateLocal(LoadedProject, name, outputPath, report));
         }
 
         public void SelectedChanged(Module module)
@@ -308,25 +319,33 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
             SelectedModule = module;
             OnPropertyChanged(nameof(SelectedModule));
             OnPropertyChanged(nameof(SelectedModuleVisibility));
+            OnPropertyChanged(nameof(IsCurrentModuleInstalled));
+            OnPropertyChanged(nameof(IsCurrentModuleLocal));
         }
 
-        private async Task Run(System.Func<Task<bool>> action)
+        // Shows the operation dialog with the status, output and progress while the module change runs
+        private async Task Run(string title, Func<Action<ProgressUpdate>, Task<bool>> action)
         {
             Busy = true;
+            var dialog = new ModuleOperationDialog(title);
+            var closed = dialog.ShowDialog(OwnerWindow);
+            var success = false;
             try
             {
-                if (!await action())
-                    await ShowModuleError("The module change could not be completed. See the Output log for details.");
+                success = await action(dialog.Report);
             }
             catch (Exception exception)
             {
                 ResourceModel.Get<ILogModel>()?.Log($"Could not change project modules: {exception}");
-                await ShowModuleError(exception.Message);
+                dialog.ReportOutput(exception.Message);
             }
             finally
             {
+                // The dialog closes itself on success and stays open on failure so the output can be read
+                dialog.Complete(success);
                 Busy = false;
             }
+            await closed;
             await ListModules();
         }
 

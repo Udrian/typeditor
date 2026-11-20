@@ -25,6 +25,8 @@
                         <ProgressBar Minimum="0" Maximum="100" Height="3" MinHeight="3" Value="{Binding SubProgress}" IsIndeterminate="{Binding SubIndeterminate}"/>
                     </StackPanel>
                 </Panel>
+                <TextBox Name="OutputBox" Height="110" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="Consolas,Menlo,DejaVu Sans Mono,monospace" FontSize="10" Opacity="0.85" Text="{Binding Output, Mode=OneWay}"/>
                 <TextBlock FontSize="11" Opacity="0.55" Text="{Binding ProjectName}" TextTrimming="CharacterEllipsis"/>
             </StackPanel>
         </StackPanel>

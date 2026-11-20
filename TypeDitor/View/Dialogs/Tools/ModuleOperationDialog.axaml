@@ -1,0 +1,21 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="300"
+        x:CompileBindings="False"
+        Width="520" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" CanResize="False"
+        x:Class="TypeDitor.View.Dialogs.Tools.ModuleOperationDialog"
+        Title="Module operation">
+    <StackPanel Margin="20" Spacing="8">
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" FontSize="14" FontWeight="SemiBold" Text="{Binding Message}" TextWrapping="Wrap"/>
+            <TextBlock Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8" Text="{Binding ProgressText}"/>
+        </Grid>
+        <ProgressBar Minimum="0" Maximum="100" Height="6" MinHeight="6" Value="{Binding Progress}"/>
+        <TextBox Name="OutputBox" Height="160" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                 FontFamily="Consolas,Menlo,DejaVu Sans Mono,monospace" FontSize="11" Text="{Binding Output, Mode=OneWay}"/>
+        <Button Content="_Close" Width="100" HorizontalAlignment="Right" IsEnabled="{Binding Finished}" Click="CloseButton_Click"/>
+    </StackPanel>
+</Window>
