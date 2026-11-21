@@ -1,9 +1,9 @@
 {
   "name": "TypeDitor",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "externals": [],
   "dependencies": [
-    "Udrian@TypeD-1.3.0",
+    "Udrian@TypeD-2.0.0",
     "Avalonia-12.1.4;nuget",
     "Avalonia.Controls.ColorPicker-12.1.4;nuget",
     "Avalonia.Desktop-12.1.4;nuget",

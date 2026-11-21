@@ -308,10 +308,10 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 report => ModuleModel.UpdateLocal(LoadedProject, module.Name, report));
         }
 
-        public Task CreateModule(string name, string outputPath)
+        public Task CreateModule(string author, string name, string outputPath, List<DependencyReference> modulesToAdd = null)
         {
             return Run($"Creating module {name}",
-                report => ModuleModel.CreateLocal(LoadedProject, name, outputPath, report));
+                report => ModuleModel.CreateLocal(LoadedProject, author, name, outputPath, modulesToAdd, report));
         }
 
         public void SelectedChanged(Module module)

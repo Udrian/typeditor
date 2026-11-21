@@ -1,8 +1,7 @@
-using System;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using TypeD.Models.Data;
 using TypeDitor.ViewModel.Dialogs.Tools;
 
 namespace TypeDitor.View.Dialogs.Tools
@@ -77,16 +76,44 @@ namespace TypeDitor.View.Dialogs.Tools
 
         private async void NewModule_Click(object sender, RoutedEventArgs e)
         {
-            var name = NewModuleName.Text?.Trim();
-            if (string.IsNullOrEmpty(name)) return;
-
-            await PickFolder("Select the folder to create the module in", path => ModulesDialogViewModel.CreateModule(name, path));
-            NewModuleName.Text = "";
+            NewModuleDialog dialog = new NewModuleDialog();
+            if(await dialog.ShowDialog<bool>(this) == true)
+            {
+                var name = dialog.ViewModel.ModuleName?.Trim();
+                var path = dialog.ViewModel.ModuleLocation?.Trim();
+                var author = dialog.ViewModel.ModuleAuthor?.Trim();
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(author))
+                {
+                    var selectedModules = dialog.ViewModel.GetSelectedModules();
+                    var modulesToAdd = new List<DependencyReference>(
+                        selectedModules.Select(m => new DependencyReference(m.Author, m.Name, m.Version, m.LocalPath))
+                    );
+                    await ModulesDialogViewModel.CreateModule(author, name, path, modulesToAdd);
+                }
+            }
+        }
+        
+        private async void Branches_Click(object sender, RoutedEventArgs e)
+        {
+            ModuleBranchesDialog moduleBranchesDialog = new ModuleBranchesDialog();
+            if(await moduleBranchesDialog.ShowDialog<bool>(this) == true)
+            {
+                await ModulesDialogViewModel.ListModules();
+            }
+        }
+        
+        private async void Repositories_Click(object sender, RoutedEventArgs e)
+        {
+            ModuleRepositoriesDialog moduleRepositoriesDialog = new ModuleRepositoriesDialog();
+            if (await moduleRepositoriesDialog.ShowDialog<bool>(this) == true)
+            {
+                await ModulesDialogViewModel.ListModules();
+            }
         }
 
-        protected override async void OnOpened(EventArgs e)
+        protected async override void OnLoaded(RoutedEventArgs e)
         {
-            base.OnOpened(e);
+            base.OnLoaded(e);
             await ModulesDialogViewModel.ListModules();
         }
 

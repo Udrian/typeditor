@@ -1,0 +1,29 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        x:CompileBindings="True"
+        x:Class="TypeDitor.View.Dialogs.Tools.ModuleBranchesDialog"
+        xmlns:vm="using:TypeDitor.ViewModel.Dialogs.Tools"
+        x:DataType="vm:ModuleBranchesDialogViewModel"
+        Title="Module branches"
+        Height="450" Width="400">
+    <Window.DataContext>
+        <vm:ModuleBranchesDialogViewModel />
+    </Window.DataContext>
+    <DockPanel Margin="25">
+        <TextBlock DockPanel.Dock="Top" FontSize="32">Module Branches</TextBlock>
+        <Separator DockPanel.Dock="Top" Margin="0" />
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBox Grid.Column="2" Margin="0, 10" Text="{Binding BranchesDisplayed}" AcceptsReturn="True" />
+            <StackPanel Grid.Row="1" HorizontalAlignment="Right">
+                <Button Content="_Save" Width="175" FontSize="14" HorizontalContentAlignment="Center" Click="ButtonSave_Click" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>

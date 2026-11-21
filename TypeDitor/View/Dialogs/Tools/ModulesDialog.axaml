@@ -36,7 +36,8 @@
         </Grid>
         <DockPanel DockPanel.Dock="Bottom" Margin="0,10,0,0" IsEnabled="{Binding Idle}">
             <Button DockPanel.Dock="Right" Content="_New module..." Margin="10,0,0,0" Click="NewModule_Click" />
-            <TextBox Name="NewModuleName" PlaceholderText="Name of new module"/>
+            <Button DockPanel.Dock="Left" Content="_Branches" Margin="10,0,0,0" Click="Branches_Click" />
+            <Button DockPanel.Dock="Left" Content="_Repositories" Margin="10,0,0,0" Click="Repositories_Click" />
         </DockPanel>
 
         <ListBox Name="ModuleList" ItemsSource="{Binding Modules}" SelectionChanged="ModuleList_SelectionChanged" >
