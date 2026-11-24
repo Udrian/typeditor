@@ -222,6 +222,23 @@ namespace TypeDitor.ViewModel.Panels
                 BuildPropertyNodes();
             });
 
+            // Dynamic properties compute their options from the children.
+            Action<Component> rebuildForChildChange = (parent) =>
+            {
+                Action update = () =>
+                {
+                    if (Component != null && ReferenceEquals(Component, parent) && Component.Properties.Any(p => p.DynamicOptions != null))
+                        BuildPropertyNodes();
+                };
+                if (Dispatcher.UIThread.CheckAccess())
+                    update();
+                else
+                    Dispatcher.UIThread.Post(update);
+            };
+            HookModel.AddHook<ComponentAddedHook>((hook) => rebuildForChildChange(hook.Parent));
+            HookModel.AddHook<ComponentRemovedHook>((hook) => rebuildForChildChange(hook.Parent));
+            HookModel.AddHook<ComponentRemovedStateChangedHook>((hook) => rebuildForChildChange(hook.Parent));
+
             HookModel.AddHook<PropertyChangedHook>((hook) =>
             {
                 if (!ReferenceEquals(Component, hook.Component) || hook.Property == null)
