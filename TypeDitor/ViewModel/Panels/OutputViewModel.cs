@@ -3,6 +3,8 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using TypeD.Helpers;
 using TypeD.Models.Data;
@@ -17,6 +19,51 @@ namespace TypeDitor.ViewModel.Panels
         {
             public string Text { get; init; }
             public IBrush Brush { get; init; }
+        }
+
+        private sealed class GameLogLineCollection : ObservableCollection<GameLogLine>
+        {
+            private const int MaxVisibleLogLines = 5000;
+            private const int TrimThreshold = 6000;
+
+            public void AddRange(IReadOnlyList<GameLogLine> lines)
+            {
+                if (lines.Count == 0)
+                    return;
+
+                var combinedCount = Items.Count + lines.Count;
+                if (combinedCount > TrimThreshold)
+                {
+                    var firstRetainedIndex = Math.Max(0, combinedCount - MaxVisibleLogLines);
+                    var retainedLines = new List<GameLogLine>(Math.Min(combinedCount, MaxVisibleLogLines));
+                    for (var i = firstRetainedIndex; i < combinedCount; i++)
+                        retainedLines.Add(i < Items.Count ? Items[i] : lines[i - Items.Count]);
+
+                    Items.Clear();
+                    foreach (var line in retainedLines)
+                        Items.Add(line);
+                }
+                else
+                    foreach (var line in lines)
+                        Items.Add(line);
+
+                NotifyReset();
+            }
+
+            public void ReplaceAll(IEnumerable<GameLogLine> lines)
+            {
+                Items.Clear();
+                foreach (var line in lines)
+                    Items.Add(line);
+                NotifyReset();
+            }
+
+            private void NotifyReset()
+            {
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+                OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            }
         }
 
         internal class LevelFilter : ViewModelBase
@@ -46,8 +93,10 @@ namespace TypeDitor.ViewModel.Panels
         // Models
         ILogModel LogModel { get; set; }
         IGameLogModel GameLogModel { get; set; }
+        IBatchedGameLogModel BatchedGameLogModel { get; set; }
 
         private readonly Action<GameLogEntry> OnGameLogEntryAdded;
+        private readonly Action<IReadOnlyList<GameLogEntry>, bool> OnGameLogEntriesAdded;
         private readonly Action OnGameLogCleared;
         private readonly Action OnLevelColorsChanged;
 
@@ -56,6 +105,7 @@ namespace TypeDitor.ViewModel.Panels
         {
             LogModel = ResourceModel.Get<ILogModel>();
             GameLogModel = ResourceModel.Get<IGameLogModel>();
+            BatchedGameLogModel = GameLogModel as IBatchedGameLogModel;
             LogModel.AttachLogOutput("OutputView", (message) =>
             {
                 OnCMDOutput(message);
@@ -69,11 +119,25 @@ namespace TypeDitor.ViewModel.Panels
             OnGameLogEntryAdded = entry => Dispatcher.UIThread.Post(() =>
             {
                 if (Passes(entry))
-                    GameLogLines.Add(CreateLine(entry, null));
+                    _gameLogLines.AddRange(new[] { CreateLine(entry, null) });
+            });
+            OnGameLogEntriesAdded = (entries, _) => Dispatcher.UIThread.Post(() =>
+            {
+                var brushes = new Dictionary<GameLogLevel, IBrush>();
+                var lines = new List<GameLogLine>(entries.Count);
+                foreach (var entry in entries)
+                {
+                    if (Passes(entry))
+                        lines.Add(CreateLine(entry, brushes));
+                }
+                _gameLogLines.AddRange(lines);
             });
             OnGameLogCleared = () => Dispatcher.UIThread.Post(() => GameLogLines.Clear());
             OnLevelColorsChanged = () => Dispatcher.UIThread.Post(RefreshGameLog);
-            GameLogModel.EntryAdded += OnGameLogEntryAdded;
+            if (BatchedGameLogModel != null)
+                BatchedGameLogModel.EntriesAdded += OnGameLogEntriesAdded;
+            else
+                GameLogModel.EntryAdded += OnGameLogEntryAdded;
             GameLogModel.Cleared += OnGameLogCleared;
             GameLogModel.LevelColorsChanged += OnLevelColorsChanged;
             RefreshGameLog();
@@ -94,7 +158,10 @@ namespace TypeDitor.ViewModel.Panels
         {
             LogModel.DetachLogOutput("OutputView");
             CMD.Output -= OnCMDOutput;
-            GameLogModel.EntryAdded -= OnGameLogEntryAdded;
+            if (BatchedGameLogModel != null)
+                BatchedGameLogModel.EntriesAdded -= OnGameLogEntriesAdded;
+            else
+                GameLogModel.EntryAdded -= OnGameLogEntryAdded;
             GameLogModel.Cleared -= OnGameLogCleared;
             GameLogModel.LevelColorsChanged -= OnLevelColorsChanged;
         }
@@ -125,17 +192,19 @@ namespace TypeDitor.ViewModel.Panels
 
         private void RefreshGameLog()
         {
-            GameLogLines.Clear();
             var brushes = new Dictionary<GameLogLevel, IBrush>();
+            var lines = new List<GameLogLine>();
             foreach (var entry in GameLogModel.GetEntries())
             {
                 if (Passes(entry))
-                    GameLogLines.Add(CreateLine(entry, brushes));
+                    lines.Add(CreateLine(entry, brushes));
             }
+            _gameLogLines.ReplaceAll(lines);
         }
 
         // Properties
-        public ObservableCollection<GameLogLine> GameLogLines { get; } = new();
+        private readonly GameLogLineCollection _gameLogLines = new();
+        public ObservableCollection<GameLogLine> GameLogLines => _gameLogLines;
         public ObservableCollection<LevelFilter> LevelFilters { get; } = new();
 
         private string _outputText;

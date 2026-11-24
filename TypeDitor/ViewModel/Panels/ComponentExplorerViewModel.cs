@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using TypeD.Helpers;
@@ -207,28 +208,36 @@ namespace TypeDitor.ViewModel.Panels
 
             HookModel.AddHook<ComponentFocusHook>((hook) =>
             {
-                if (hook.Root && ReferenceEquals(hook.Project, LoadedProject))
+                Action update = () =>
                 {
-                    Nodes.Clear();
-                    if (Component != null)
+                    if (hook.Root && ReferenceEquals(hook.Project, LoadedProject))
                     {
-                        Nodes.Add(new Node(Component) { IsExpanded = true });
-                        SelectedNode = Nodes[0];
+                        Nodes.Clear();
+                        if (Component != null)
+                        {
+                            Nodes.Add(new Node(Component) { IsExpanded = true });
+                            SelectedNode = Nodes[0];
+                        }
+                        RefreshFilter();
                     }
-                    RefreshFilter();
-                }
-                else if (!_publishingSelection
-                    && ReferenceEquals(hook.Project, LoadedProject)
-                    && Component != null
-                    && ReferenceEquals(GetRootComponent(hook.Component), Component))
-                {
-                    var all = Nodes.Flatten(node => node.Nodes).ToList();
-                    var focused = all.FirstOrDefault(node => ReferenceEquals(node.Component, hook.Component));
-                    var others = hook.Selection == null
-                        ? Enumerable.Empty<Node>()
-                        : all.Where(node => !ReferenceEquals(node, focused) && hook.Selection.Contains(node.Component));
-                    SelectionRequested?.Invoke(others.Append(focused).Where(node => node != null).ToList());
-                }
+                    else if (!_publishingSelection
+                        && ReferenceEquals(hook.Project, LoadedProject)
+                        && Component != null
+                        && ReferenceEquals(GetRootComponent(hook.Component), Component))
+                    {
+                        var all = Nodes.Flatten(node => node.Nodes).ToList();
+                        var focused = all.FirstOrDefault(node => ReferenceEquals(node.Component, hook.Component));
+                        var others = hook.Selection == null
+                            ? Enumerable.Empty<Node>()
+                            : all.Where(node => !ReferenceEquals(node, focused) && hook.Selection.Contains(node.Component));
+                        SelectionRequested?.Invoke(others.Append(focused).Where(node => node != null).ToList());
+                    }
+                };
+
+                if (Dispatcher.UIThread.CheckAccess())
+                    update();
+                else
+                    Dispatcher.UIThread.Post(update);
             });
 
             HookModel.AddHook<CloseComponentHook>((hook) =>

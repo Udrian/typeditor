@@ -2,6 +2,7 @@
 
 using Avalonia.Controls.Templates;
 using Avalonia.Data.Converters;
+using Avalonia.Threading;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using TypeD.Models.Data;
@@ -200,10 +201,18 @@ namespace TypeDitor.ViewModel.Panels
 
             HookModel.AddHook<ComponentFocusHook>((hook) =>
             {
-                if(Component == hook.Component)
-                    return;
-                Component = hook.Component;
-                BuildPropertyNodes();
+                Action update = () =>
+                {
+                    if (Component == hook.Component)
+                        return;
+                    Component = hook.Component;
+                    BuildPropertyNodes();
+                };
+
+                if (Dispatcher.UIThread.CheckAccess())
+                    update();
+                else
+                    Dispatcher.UIThread.Post(update);
             });
 
             HookModel.AddHook<ComponentPropertiesChangedHook>((hook) =>

@@ -29,7 +29,7 @@ namespace TypeDitor.View.Panels
         private void GameLogLines_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             // Keep the newest game log lines visible, scrolled after the layout pass has run
-            if (e.Action == NotifyCollectionChangedAction.Add)
+            if (e.Action is NotifyCollectionChangedAction.Add or NotifyCollectionChangedAction.Reset)
                 Dispatcher.UIThread.Post(() => svGameLog.ScrollToEnd(), DispatcherPriority.Background);
         }
 
