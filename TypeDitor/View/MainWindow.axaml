@@ -87,7 +87,12 @@
         </Menu>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" DockPanel.Dock="Top" Name="Toolbar"/>
         <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
-            <TextBlock VerticalAlignment="Center" Margin="5,2" Text="{Binding LoadedProject.Location}"/>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" VerticalAlignment="Center" Margin="5,2">
+                <TextBlock Text="{Binding LoadedProject.Location}" TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="{Binding SaveStatus}" FontSize="11" Opacity="0.7"
+                           VerticalAlignment="Center"/>
+            </Grid>
             <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="8,2">
                 <TextBlock Text="{Binding BuildStatus}" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding BuildSubTask}" IsVisible="{Binding HasBuildSubTask}"

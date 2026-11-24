@@ -2,6 +2,7 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using TypeD;
+using TypeD.Models.Data.SettingContexts;
 using TypeD.Models.Interfaces;
 using TypeDitor.Models;
 using TypeDitor.Models.PropertyTemplates;
@@ -25,6 +26,7 @@ namespace TypeDitor
             resourceModel.Get<IPropertyModel>().RegisterTemplate(new FolderListPropertyTemplate());
             var settingModel = resourceModel.Get<ISettingModel>();
             settingModel.InitContext<ProjectScanSettingContext>(null);
+            settingModel.InitContext<AutosaveSettingContext>(null);
             ProjectScanSettings.MigrateLegacy(settingModel, resourceModel.Get<ILogModel>());
             ThemeManager.ApplyGlobal();
             CrashHandler.Init(resourceModel);

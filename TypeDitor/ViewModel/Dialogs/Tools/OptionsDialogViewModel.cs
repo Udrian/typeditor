@@ -5,9 +5,9 @@ using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
 using TypeD.Models.Data.SettingContexts;
 using TypeD.Models.Interfaces;
+using TypeDitor.Models;
 using TypeD.View;
 using TypeD.ViewModel;
-using TypeDitor.Models;
 
 namespace TypeDitor.ViewModel.Dialogs.Tools
 {
@@ -246,6 +246,28 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 PropertyModel, SettingModel, LoadedProject, allowProjectDefault: false));
             categories[scanFoldersCategory.Name] = scanFoldersCategory;
 
+            var autosaveSettings = SettingModel.GetContext<AutosaveSettingContext>(SettingLevel.User);
+            var autosaveCategory = categories.TryGetValue("Autosave", out var existingAutosaveCategory)
+                ? existingAutosaveCategory
+                : new SettingCategory("Autosave");
+            autosaveCategory.Options.Add(new Option(
+                new SettingItem(
+                    "Autosave interval (minutes)",
+                    "Minutes between autosaves. Set to 0 to turn autosave off.",
+                    autosaveSettings.IntervalMinutes,
+                    value => SaveAutosaveSettings(autosaveSettings, autosaveSettings.IntervalMinutes, value),
+                    "Autosave"),
+                PropertyModel, SettingModel, LoadedProject, allowProjectDefault: false));
+            autosaveCategory.Options.Add(new Option(
+                new SettingItem(
+                    "Autosave backups to keep",
+                    "Maximum number of autosave snapshots to retain. Set to 0 to turn autosave backups off.",
+                    autosaveSettings.BackupCount,
+                    value => SaveAutosaveSettings(autosaveSettings, autosaveSettings.BackupCount, value),
+                    "Autosave"),
+                PropertyModel, SettingModel, LoadedProject, allowProjectDefault: false));
+            categories[autosaveCategory.Name] = autosaveCategory;
+
             var shortcutCategory = new SettingCategory("Shortcuts");
             var shortcutSetting = SettingModel.GetContext<MainWindowSettingContext>()?.ShortcutOverrides;
             foreach (var command in CommandRegistry.Commands.OrderBy(command => command.Name))
@@ -274,6 +296,27 @@ namespace TypeDitor.ViewModel.Dialogs.Tools
                 ArgumentException or InvalidOperationException or NotSupportedException)
             {
                 ShowProjectScanFolderError(exception);
+            }
+        }
+
+        private void SaveAutosaveSettings(AutosaveSettingContext context, ISetting setting, object value)
+        {
+            try
+            {
+                var newValue = Convert.ToInt32(value);
+                if (newValue < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), "Autosave settings cannot be negative.");
+
+                setting.SetValue(newValue);
+                SettingModel.SetContext(context, SettingLevel.User);
+                AutosaveManager.NotifySettingsChanged();
+                ShowError(string.Empty);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                ArgumentException or InvalidOperationException or NotSupportedException or FormatException or OverflowException)
+            {
+                ShowError($"Could not update autosave settings: {exception.Message}");
+                ResourceModel.Get<ILogModel>()?.Log($"Could not update autosave settings: {exception}");
             }
         }
 

@@ -66,6 +66,41 @@ namespace TypeDitor.Commands
                 try
                 {
                     LogModel.AttachLogOutput(LogName, line => logLines.Enqueue($"[{DateTime.Now:HH:mm:ss}] {line}"));
+                    AutosaveManager.RecoverySnapshot recovery = null;
+                    TypeD.Models.Data.Project recoveryProject = null;
+                    try
+                    {
+                        recoveryProject = ProjectProvider.ReadConfiguration(path);
+                        recovery = AutosaveManager.FindNewerSnapshot(recoveryProject);
+                    }
+                    catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                        System.Text.Json.JsonException or ArgumentException or InvalidOperationException or NotSupportedException)
+                    {
+                        LogModel.Log($"Could not check autosave for {path}: {exception}");
+                        await MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                            "Autosave recovery unavailable",
+                            $"The autosave could not be checked. The project will be opened without recovery.{Environment.NewLine}{Environment.NewLine}{exception.Message}",
+                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(ViewModelBase.MainWindow);
+                    }
+
+                    if (recovery != null)
+                    {
+                        var result = await MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                            "Restore autosave",
+                            $"A newer autosave from {recovery.CreatedAtUtc.ToLocalTime():g} is available for this project. Restore it?",
+                            MsBox.Avalonia.Enums.ButtonEnum.YesNo,
+                            MsBox.Avalonia.Enums.Icon.Question).ShowWindowDialogAsync(ViewModelBase.MainWindow);
+                        if (result == MsBox.Avalonia.Enums.ButtonResult.Yes)
+                        {
+                            await Task.Run(() => AutosaveManager.RestoreSnapshot(
+                                recoveryProject,
+                                recovery,
+                                ResourceModel.Get<ISettingModel>()));
+                            LogModel.Log($"Restored autosave for {path} from {recovery.CreatedAtUtc:O}.");
+                        }
+                    }
+
                     // Switch to the theme of the project before showing its progress
                     ThemeManager.ApplyProject(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
                     progressDialog = new OpenProjectProgressDialog(path);

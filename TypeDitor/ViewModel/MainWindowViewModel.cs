@@ -90,6 +90,17 @@ namespace TypeDitor.ViewModel
         public ClosePanelCommand ClosePanelCommand { get; set; }
         // Data
         public Project LoadedProject { get; private set; }
+        public string SaveStatus
+        {
+            get => _saveStatus;
+            private set
+            {
+                if (_saveStatus == value)
+                    return;
+                _saveStatus = value;
+                OnPropertyChanged();
+            }
+        }
         public TypeDockFactory DockFactory { get; }
         private IRootDock _layout;
         public IRootDock Layout
@@ -111,6 +122,9 @@ namespace TypeDitor.ViewModel
         private string _buildStatus = "Build status unavailable";
         private List<IDisposable> CommandRegistrations { get; set; } = new();
         private readonly EditorDialogModel EditorDialogs = new();
+        private readonly AutosaveManager AutosaveManager;
+        private readonly DispatcherTimer SaveStatusTimer;
+        private string _saveStatus;
 
         public bool IsBuilding
         {
@@ -248,6 +262,7 @@ namespace TypeDitor.ViewModel
                 setting.SizeX.Value = value;
                 SettingModel.SetContext(setting);
             }
+
         }
 
         public int SizeY
@@ -299,7 +314,17 @@ namespace TypeDitor.ViewModel
 
             HookModel = ResourceModel.Get<IHookModel>();
             SaveModel = ResourceModel.Get<ISaveModel>();
+            SaveModel.SaveStateChanged += OnSaveStateChanged;
             SettingModel = ResourceModel.Get<ISettingModel>();
+            AutosaveManager = new AutosaveManager(
+                loadedProject,
+                SaveModel,
+                SettingModel,
+                ResourceModel.Get<ILogModel>());
+            SaveStatusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+            SaveStatusTimer.Tick += (_, _) => RefreshSaveStatus();
+            SaveStatusTimer.Start();
+            RefreshSaveStatus();
             _windowState = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User)?.Fullscreen.Value == true
                 ? WindowState.Maximized
                 : WindowState.Normal;
@@ -591,6 +616,9 @@ namespace TypeDitor.ViewModel
             }
 
             SaveDockLayout();
+            SaveStatusTimer.Stop();
+            AutosaveManager.Dispose();
+            SaveModel.SaveStateChanged -= OnSaveStateChanged;
             HookModel.Shoot(new ExitHook() { Project = LoadedProject });
             TypeDInit.ProjectUnload(LoadedProject, ResourceModel);
             // Another project may already have been opened in a new main window
@@ -611,6 +639,46 @@ namespace TypeDitor.ViewModel
             var setting = SettingModel.GetContext<MainWindowSettingContext>(SettingLevel.User);
             setting.DockLayout.Value = new AvaloniaDockSerializer().Serialize(Layout);
             SettingModel.SetContext(setting);
+        }
+
+        private void RefreshSaveStatus()
+        {
+            var activity = ProjectSaveState.GetLatestActivity(LoadedProject);
+            if (SaveModel.AnythingToSave)
+            {
+                if (activity.IsAutosave)
+                {
+                    var age = FormatSaveAge(activity.TimestampUtc);
+                    SaveStatus = $"Autosaved {age} (unsaved changes)";
+                }
+                else
+                {
+                    SaveStatus = "Unsaved changes";
+                }
+                return;
+            }
+
+            if (activity.TimestampUtc == DateTime.MinValue)
+            {
+                SaveStatus = "Not saved";
+                return;
+            }
+
+            SaveStatus = $"{(activity.IsAutosave ? "Autosaved" : "Saved")} {FormatSaveAge(activity.TimestampUtc)}";
+        }
+
+        private void OnSaveStateChanged(bool anythingToSave)
+        {
+            Dispatcher.UIThread.Post(RefreshSaveStatus);
+        }
+
+        private static string FormatSaveAge(DateTime timestampUtc)
+        {
+            var elapsed = DateTime.UtcNow - timestampUtc;
+            return elapsed.TotalSeconds < 60 ? "just now"
+                : elapsed.TotalMinutes < 60 ? $"{Math.Max(1, (int)elapsed.TotalMinutes)} min ago"
+                : elapsed.TotalHours < 24 ? $"{Math.Max(1, (int)elapsed.TotalHours)} hr ago"
+                : $"{Math.Max(1, (int)elapsed.TotalDays)} days ago";
         }
 
         public bool TryExecuteShortcut(string shortcut, string scope)
