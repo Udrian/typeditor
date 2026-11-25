@@ -356,10 +356,7 @@ namespace TypeDitor.ViewModel.Panels
             var componentContextMenuHook = CreateComponentContextMenu(node?.Component);
 
             contextMenu.Items.Clear();
-            foreach (var menu in componentContextMenuHook.Menu.Items)
-            {
-                ViewHelper.InitMenu(contextMenu, menu, this);
-            }
+            ViewHelper.InitContextMenu(contextMenu, componentContextMenuHook.Menu, this);
         }
 
         public bool TryExecuteShortcut(string shortcut, Component selectedComponent)
