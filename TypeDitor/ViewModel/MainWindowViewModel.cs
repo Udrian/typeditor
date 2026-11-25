@@ -498,6 +498,12 @@ namespace TypeDitor.ViewModel
                 CreateControl = () => new CameraToolbar(ResourceModel)
             });
 
+            initUIHook.Toolbar.Add("Simulation", new TypeD.View.ToolbarItem
+            {
+                Name = "Simulation",
+                CreateControl = () => new SimulationToolbar(ResourceModel)
+            });
+
             var menu = initUIHook.Menu;
             var viewMenuItem = new TypeD.View.MenuItem()
             {
