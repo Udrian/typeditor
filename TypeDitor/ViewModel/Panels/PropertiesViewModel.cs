@@ -267,7 +267,7 @@ namespace TypeDitor.ViewModel.Panels
                 RefreshGroups();
                 return;
             }
-            foreach(var property in Component.Properties)
+            foreach(var property in Component.Properties.Where(p => !p.Hidden))
             {
                 Action<PropertyNode, object> valueChanged = (node, value) =>
                 {
