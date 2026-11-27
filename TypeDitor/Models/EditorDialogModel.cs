@@ -61,14 +61,14 @@ namespace TypeDitor.Models
             return hook.Result ?? Task.FromResult<ComponentCreationOptions>(null);
         }
 
-        public Task<(CustomProperty Property, Type Type)?> AddCustomPropertyAsync(IEnumerable<IPropertyDefinition> definitions, IEnumerable<string> takenNames)
+        public Task<(CustomProperty Property, Type Type, bool RememberFields)?> AddCustomPropertyAsync(IEnumerable<IPropertyDefinition> definitions, IEnumerable<string> takenNames)
         {
             var hook = ViewModelBase.ResourceModel.Get<IHookModel>().Shoot(new AddCustomPropertyDialogHook
             {
                 Definitions = definitions,
                 TakenNames = takenNames
             });
-            return hook.Result ?? Task.FromResult<(CustomProperty Property, Type Type)?>(null);
+            return hook.Result ?? Task.FromResult<(CustomProperty Property, Type Type, bool RememberFields)?>(null);
         }
     }
 }

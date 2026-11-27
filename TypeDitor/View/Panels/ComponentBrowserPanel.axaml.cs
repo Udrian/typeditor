@@ -5,6 +5,9 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using TypeD.Models.Data;
 using TypeD.Models;
+using TypeD.Models.Interfaces;
+using TypeD.Models.Providers.Interfaces;
+using TypeD.ViewModel;
 using TypeDitor.ViewModel.Panels;
 
 namespace TypeDitor.View.Panels
@@ -77,6 +80,40 @@ namespace TypeDitor.View.Panels
         private void ContextMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
             ViewModel.ContextMenuOpened(sender as ContextMenu, TreeView.SelectedItem as ComponentBrowserViewModel.Node);
+        }
+
+        private void ComponentToolTip_Opening(object sender, CancelRoutedEventArgs e)
+        {
+            var control = (Control)sender;
+            if (control.DataContext is not ComponentBrowserViewModel.Node { Context.Item: Component component } ||
+                ToolTip.GetTip(control) is not ToolTip toolTip)
+            {
+                e.Cancel = true;
+                e.Handled = true;
+                return;
+            }
+
+            var resources = ViewModelBase.ResourceModel;
+            var provider = resources.Get<IComponentProvider>();
+            var current = provider.Load(ViewModel.LoadedProject, component.FullName);
+            if (current == null)
+            {
+                resources.Get<ILogModel>().Log($"Could not display component information: '{component.FullName}' is no longer available.");
+                e.Cancel = true;
+                e.Handled = true;
+                return;
+            }
+            Component ResolveBase(Component parent)
+            {
+                var loaded = provider.Load(ViewModel.LoadedProject, parent.FullName);
+                if (loaded == null)
+                {
+                    resources.Get<ILogModel>().Log($"Could not reload base component '{parent.FullName}' for the component tooltip.");
+                    return parent;
+                }
+                return loaded;
+            }
+            toolTip.Content = current.CreateToolTip(ResolveBase);
         }
 
         private void TreeViewItem_MouseDoubleClickEvent(object sender, TappedEventArgs e)

@@ -15,7 +15,7 @@
               KeyDown="TreeView_KeyDown">
         <TreeView.ItemTemplate>
             <TreeDataTemplate ItemsSource="{Binding Nodes}">
-                <Grid>
+                <Grid Background="Transparent" ToolTip.Tip="{Binding ToolTip}" ToolTip.ToolTipOpening="ComponentToolTip_Opening">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"/>
                         <ColumnDefinition Width="5"/>

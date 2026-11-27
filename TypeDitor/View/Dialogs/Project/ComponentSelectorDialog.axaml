@@ -9,12 +9,14 @@
         x:DataType="vm:ComponentSelectorViewModel"
         Title="Select Component"
         Width="800" Height="450">
-    <Grid>
+    <Grid Margin="12" RowSpacing="8">
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <ListBox x:Name="lbComponents" Grid.Row="0" ItemsSource="{Binding FilteredComponents}" DoubleTapped="lbComponents_MouseDoubleClick">
+        <TextBox x:Name="tbFilter" Grid.Row="0" PlaceholderText="Search components..." TextChanged="tbFilter_TextChanged" />
+        <ListBox x:Name="lbComponents" Grid.Row="1" ItemsSource="{Binding FilteredComponents}" DoubleTapped="lbComponents_MouseDoubleClick">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid>
@@ -26,13 +28,16 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="{Binding FullName}" Grid.Row="0" Margin="20,0,0,0" HorizontalAlignment="Left" FontWeight="Bold" />
-                        <TextBlock Text="{Binding TypeOBaseType}" Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" FontSize="10" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding ClassName}" Grid.Row="0" HorizontalAlignment="Left" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Namespace}" Grid.Row="1" HorizontalAlignment="Left" FontSize="11" TextTrimming="CharacterEllipsis" />
                     </Grid>
 
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <TextBox x:Name="tbFilter" Grid.Row="1" TextChanged="tbFilter_TextChanged" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="_Cancel" IsCancel="True" Click="Cancel_Click"/>
+            <Button Content="_Select" IsDefault="True" Click="Select_Click"/>
+        </StackPanel>
     </Grid>
 </Window>

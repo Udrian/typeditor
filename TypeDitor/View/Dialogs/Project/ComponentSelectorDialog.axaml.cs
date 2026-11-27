@@ -82,6 +82,19 @@ namespace TypeDitor.View.Dialogs.Project
 
         private void lbComponents_MouseDoubleClick(object sender, RoutedEventArgs e)
         {
+            SelectComponent();
+        }
+
+        private void Select_Click(object sender, RoutedEventArgs e) => SelectComponent();
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SelectedComponent = null;
+            Close(false);
+        }
+
+        private void SelectComponent()
+        {
             if (lbComponents.SelectedItem is not Component component) return;
             ViewModel.SelectedComponent = component;
             Close(true);

@@ -19,6 +19,8 @@ namespace TypeDitor.ViewModel.Panels
         public class Node
         {
             public TypeD.Models.Data.Project Project { get; set; }
+            private ToolTip toolTip;
+            public ToolTip ToolTip => Context.Item is Component ? toolTip ??= new ToolTip() : null;
             public Bitmap Icon
             {
                 get

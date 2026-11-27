@@ -13,6 +13,34 @@ Vec2, and engine-content templates are resources of TypeDCore, not TypeDitor.
 Module initialization attaches the engine panels; unloading removes them.
 Existing panel IDs are preserved.
 
+Choose **Create Component** from the Project menu or a component context menu
+to select an Entity, Scene, or Drawable root in one dialog. Parent choices are
+restricted to the selected root. The component browser also suggests the
+selected namespace.
+The base-type field autocompletes fully qualified types for the selected root;
+after selection it shows the name with the namespace underneath.
+Add, edit, or remove custom properties in the creation dialog; inherited
+custom properties are listed read-only. Draft properties are not remembered
+for the next component, and cancelling leaves the project unchanged.
+For Entity components, **Update this entity** and **Draw this entity** control
+the generated update and draw methods and are enabled by default; inherited
+capabilities cannot be disabled.
+Right-click a component in the browser and choose **Create Derived Component**
+to use it as the new component's base type.
+Hover a component in the browser to see its base and root types and its custom
+properties, including inherited public and protected properties.
+**Edit Component** supports changing the name, namespace, base or root type,
+entity capabilities, icon, and custom properties, with a confirmation and
+undo/redo. Values that cannot be used after a base or custom-property change
+are preserved for manual repair. Identity changes require a saved, compiling
+project and are written immediately; save pending changes before the edit and
+before its undo or redo. Namespace moves require each partial declaration to be
+the only type in a top-level namespace. References outside the loaded project
+and code affected by base, capability, or property changes may need manual repair.
+Both **Create Component** and **Add Property** have **Remember fields** enabled
+by default to reuse the last successfully submitted values for that project. Names are
+always left blank; cancelling a dialog does not change the saved values.
+
 TypeDitor's generic dialog service raises TypeD's `CreateComponentDialogHook`
 and `AddCustomPropertyDialogHook`. A loaded core module supplies those dialogs
 and their asynchronous results. Without a provider, the request returns no
@@ -32,6 +60,15 @@ Affected source files are listed separately; type changes let you edit
 converted values. Values that cannot be converted use the new default.
 Changing access away from public removes displayed values and overrides after
 confirmation. Non-public properties do not appear in the Properties panel.
+Overrides for unavailable properties are retained in component files and
+restored when those properties become available again. If an unresolved
+override conflicts with a newly available property in memory, saving is
+blocked rather than silently discarding the override.
+When a base-type migration encounters an incompatible property with the same
+name, the original value and type are retained separately in the component
+file for manual repair. Component files now use TypeD format version 2;
+opening older files upgrades them with backups, and older editors cannot open
+the upgraded files.
 
 Renaming uses the saved C# project for semantic references, so save the
 component and fix project compilation errors first. A progress dialog is shown
