@@ -62,7 +62,8 @@
                     <ItemsControl ItemsSource="{Binding Properties}" IsVisible="{Binding IsExpanded}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Height="28" ToolTip.Tip="{Binding Description}">
+                                <Grid Height="28" ToolTip.Tip="{Binding Description}"
+                                      ContextRequested="Property_ContextRequested">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="LabelColumn" />
                                         <ColumnDefinition Width="1" />

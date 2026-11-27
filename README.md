@@ -20,6 +20,27 @@ result. Neither project requires a reference to the other.
 
 Build the standalone editor solution with `dotnet build TypeDitor.slnx`.
 
+## Custom properties
+
+Right-click a custom property on its declaring component in the Properties
+panel to edit or remove it. The confirmation groups property values by
+component, with named node paths, current values, and replacement values. The
+declaring component itself is not listed.
+Inherited nested components are shown only when their property is overridden
+in that component.
+Affected source files are listed separately; type changes let you edit
+converted values. Values that cannot be converted use the new default.
+Changing access away from public removes displayed values and overrides after
+confirmation. Non-public properties do not appear in the Properties panel.
+
+Renaming uses the saved C# project for semantic references, so save the
+component and fix project compilation errors first. A progress dialog is shown
+while the project is scanned. Save affected files in
+other editors before confirming: source changes are written immediately,
+while component changes are saved with the project. References outside the
+loaded C# project and code affected by a type or access change may need manual
+updates. Edit and removal support undo and redo.
+
 ## Project window
 
 The Project Window scans configured folders recursively for TypeO executable

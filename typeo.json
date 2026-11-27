@@ -1,9 +1,9 @@
 {
   "name": "TypeDitor",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "externals": [],
   "dependencies": [
-    "Udrian@TypeD-2.6.0",
+    "Udrian@TypeD-2.7.0",
     "Avalonia-12.1.4;nuget",
     "Avalonia.Controls.ColorPicker-12.1.4;nuget",
     "Avalonia.Desktop-12.1.4;nuget",
@@ -15,7 +15,9 @@
     "Dock.Avalonia.Themes.Fluent-12.1.0.13;nuget",
     "Avalonia.Diagnostics-11.3.22;nuget",
     "CommunityToolkit.Mvvm-8.4.2;nuget",
-    "MessageBox.Avalonia-12.1.0;nuget"
+    "MessageBox.Avalonia-12.1.0;nuget",
+    "Microsoft.CodeAnalysis.CSharp.Workspaces-5.0.0;nuget",
+    "Microsoft.CodeAnalysis.Workspaces.MSBuild-5.0.0;nuget"
   ],
   "type": "exe",
   "project": [

@@ -1,6 +1,7 @@
 #nullable enable annotations
 
 using Avalonia.Controls.Templates;
+using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Threading;
 using System.Collections.ObjectModel;
@@ -14,6 +15,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using System.Text.Json;
 using TypeD.Models.Data.SettingContexts;
+using TypeD.Helpers;
 
 namespace TypeDitor.ViewModel.Panels
 {
@@ -288,6 +290,18 @@ namespace TypeDitor.ViewModel.Panels
                     ?? new PropertyNode(Component, property, valueChanged));
             }
             RefreshGroups();
+        }
+
+        public bool BuildPropertyContextMenu(ContextMenu menu, PropertyNode node)
+        {
+            var hook = HookModel.Shoot(new PropertyContextMenuHook
+            {
+                Project = Project,
+                Component = node.Component,
+                Property = node.Property
+            });
+            ViewHelper.InitContextMenu(menu, hook.Menu, this);
+            return menu.Items.Count > 0;
         }
 
         private void RefreshGroups()

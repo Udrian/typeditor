@@ -24,6 +24,19 @@ namespace TypeDitor.View.Panels
             DataContext = ViewModel = new PropertiesViewModel(this, project);
         }
 
+        private void Property_ContextRequested(object sender, ContextRequestedEventArgs e)
+        {
+            if (e.Handled || sender is not Control control || control.DataContext is not PropertyNode node)
+                return;
+            var menu = new ContextMenu();
+            if (!ViewModel.BuildPropertyContextMenu(menu, node))
+                return;
+            control.ContextMenu = menu;
+            menu.Closed += (_, _) => control.ContextMenu = null;
+            menu.Open(control);
+            e.Handled = true;
+        }
+
         private void GroupHeader_PointerPressed(object sender, PointerPressedEventArgs e)
         {
             if (sender is not Border header || !e.GetCurrentPoint(header).Properties.IsLeftButtonPressed)
